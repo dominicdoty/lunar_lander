@@ -110,6 +110,13 @@
           <p>{message}</p>
         {/each}
       </div>
+      <div class="card-footer">
+        <div class="card-footer-item">
+          <a href="https://github.com/dominicdoty/lunar_lander"
+            >Source now available on GitHub!</a
+          >
+        </div>
+      </div>
     </div>
   </div>
 </div>
