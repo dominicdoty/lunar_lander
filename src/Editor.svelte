@@ -111,14 +111,4 @@
     opacity: 0.9;
     color: white;
   }
-
-  textarea {
-    resize: none;
-    color: white;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    margin: 0px;
-    padding: 1em;
-  }
 </style>
