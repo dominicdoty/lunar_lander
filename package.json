@@ -26,7 +26,10 @@
     "vite": "^4.1.0"
   },
   "dependencies": {
-    "fflate": "^0.8.0"
+    "@codemirror/lang-javascript": "^6.2.2",
+    "fflate": "^0.8.0",
+    "svelte-codemirror-editor": "^1.4.0",
+    "thememirror": "^2.0.1"
   },
   "prettier": {
     "trailingComma": "es5",

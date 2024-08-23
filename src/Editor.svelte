@@ -2,6 +2,10 @@
   import { runNoConsole } from "./helper";
   import { userCodeFunction, runLander, userCode } from "./render";
 
+  import CodeMirror from "svelte-codemirror-editor";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { barf as codetheme } from "thememirror";
+
   // Stop lander running when we go back to launch tab
   $runLander = false;
 
@@ -71,31 +75,30 @@
 </script>
 
 <div class="textdiv p-4">
-  <div class="textdiv">
-    <textarea
-      bind:value={codeText}
-      on:input={() => {
-        $userCode = codeText;
-      }}
-      class="has-background-black-ter"
-      spellcheck="false"
-    />
-    {#if traceBack != ""}
-      <div class="erroroverlay">
-        <div class="p-3">
-          {traceBack}
-        </div>
-      </div>
-    {/if}
-  </div>
+  <CodeMirror
+    bind:value={codeText}
+    on:change={() => ($userCode = codeText)}
+    theme={codetheme}
+    lang={javascript()}
+  />
+
+  {#if traceBack != ""}
+    <div class="erroroverlay">
+      <div class="p-3">{traceBack}</div>
+    </div>
+  {/if}
 </div>
 
 <style>
   .textdiv {
-    height: 100%;
+    min-height: 100%;
     width: 100%;
+    margin-bottom: 1em;
+    background-color: #15191e;
     box-sizing: border-box;
     position: relative;
+    outline: 1px solid #dee2e6;
+    border-radius: 0 0.5rem 0.5rem 0.5rem;
   }
 
   .erroroverlay {
@@ -104,6 +107,7 @@
     width: 100%;
     position: absolute;
     background-color: darkred;
+    border-radius: 0 0 0.5rem 0.5rem;
     opacity: 0.9;
     color: white;
   }
