@@ -14,6 +14,7 @@
     Explosion,
     landerSuccessState,
     cartToPolar,
+    userLogs,
   } from "./render";
   import type { Point, Line } from "./render";
   import { renderable, gground } from "./game";

@@ -13,6 +13,7 @@
     landerState,
     landerSuccessState,
     cartToPolar,
+    userLogs,
   } from "./render";
   import { onMount } from "svelte";
   import { launchError, regenerateGround } from "./game";
@@ -21,6 +22,7 @@
     crashRotVelLimit,
     crashVelocityLimit,
   } from "./lander";
+  import Console from "./Console.svelte";
 
   let modalState = "";
   if (!$startupModalDisplayed) {
@@ -146,6 +148,7 @@
         color="is-success"
         onClick={() => {
           $runLander = true;
+          $userLogs = [];
           initialDifficulty = $landerState.getDifficulty();
         }}
       />
@@ -182,6 +185,7 @@
   </div>
 
   <Canvas>
+    <Console />
     <Background color="hsl(0, 0%, 10%)">
       <DotGrid color="hsla(0, 0%, 100%, 0.5)" />
       <FPS />

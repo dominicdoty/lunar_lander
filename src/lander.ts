@@ -1,11 +1,23 @@
 import { cartToPolar, type Line, type Point } from "./render";
-import { Rotate, deg2rad } from "./render";
+import { Rotate, deg2rad, userLogs } from "./render";
 import { gground, launchError } from "./game";
 import { aboveGround, findGroundPoint } from "./ground_utils";
 
 export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
+
+let logCallNum = 0;
+const logRateLimit = 60;
+let log = (...data: any[]) => {
+  if (logCallNum % logRateLimit) {
+    userLogs.update((v) => {
+      v.push(data.join(""));
+      return v;
+    });
+  }
+  logCallNum++;
+};
 
 function wrapAngle(angle: number): number {
   angle = (angle + 180) % 360;
@@ -94,10 +106,7 @@ export class LanderPhysics {
   }
 
   getAltitude(): number {
-    let [gp, _] = findGroundPoint(
-      this.ground,
-      this.pos
-    );
+    let [gp, _] = findGroundPoint(this.ground, this.pos);
     return this.pos[1] - gp[1];
   }
 
@@ -153,6 +162,7 @@ export class LanderPhysics {
         altitude: this.getAltitude(),
         angle: this.angle,
         userStore: this.userStore,
+        log: log,
       });
 
       if (!("rotThrust" in userReturn)) {
@@ -250,10 +260,7 @@ export class LanderPhysics {
     // Find position of each corner of the lander bounding box
     for (let corner of this.getBbox()) {
       // Check for below ground
-      this.isAboveGround = aboveGround(
-        this.ground,
-        corner
-      );
+      this.isAboveGround = aboveGround(this.ground, corner);
 
       if (!this.isAboveGround) {
         break;

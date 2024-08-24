@@ -13,12 +13,13 @@ export const userCode = writable("");
 export const userCodeFunction = writable(() => {
   return { rotThrust: 0, aftThrust: 0, userStore: {} };
 });
+export const userLogs = writable([]);
 export const startupModalDisplayed = writable(false);
 export const runLander = writable(false);
 export const resetLander = writable(false);
 export const landerSuccessState = writable("");
 export const landerState = writable(
-  new LanderPhysics([0, 0], [0, 0], 0, 0, () => { }, false, false)
+  new LanderPhysics([0, 0], [0, 0], 0, 0, () => {}, false, false)
 );
 
 /** Coordinate system view

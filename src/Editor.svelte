@@ -41,6 +41,7 @@
           altitude: 500,
           angle: 0,
           userStore: tmpUserStore,
+          log: () => {},
         });
 
         if (!("rotThrust" in userReturn)) {

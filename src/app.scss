@@ -1,3 +1,8 @@
+$table-background-color: #404040;
+$table-head-cell-color: #dee2e6;
+$table-color: #dee2e6;
+$table-row-hover-background-color: #515151;
+
 /* Write your global styles here, in SCSS syntax. Variables and mixins from the src/variables.scss file are available here without importing */ /* Import only what you need from Bulma */
 @import "bulma/sass/utilities/_all";
 @import "bulma/sass/base/_all";
@@ -7,6 +12,7 @@
 @import "bulma/sass/elements/progress.sass";
 @import "bulma/sass/elements/button.sass";
 @import "bulma/sass/elements/box.sass";
+@import "bulma/sass/elements/table.sass";
 @import "bulma/sass/grid/columns.sass";
 @import "bulma/sass/form/shared.sass";
 @import "bulma/sass/form/input-textarea.sass";
@@ -16,8 +22,8 @@
 @import "bulma/sass/helpers/visibility.sass";
 
 .is-float-right {
-    @extend .is-narrow;
-    margin-left:auto;
+  @extend .is-narrow;
+  margin-left: auto;
 }
 
 // @import "bulma/sass/elements/_all";
