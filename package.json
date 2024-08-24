@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.2",
+    "c3": "^0.7.20",
     "fflate": "^0.8.0",
     "js-beautify": "^1.15.1",
     "svelte-codemirror-editor": "^1.4.0",

@@ -1,5 +1,12 @@
 // Arguments:
-let { x_position, altitude, angle, userStore } = arguments[0];
+let {
+  x_position,
+  altitude,
+  angle,
+  userStore,
+  log,
+  plot
+} = arguments[0];
 
 let [rp, ri, rd] = [0.03, 0.0, 0.6];
 let [p, i, d] = [0.5, 0.01, 0.001];
@@ -18,7 +25,11 @@ if (!("integral" in userStore)) {
   userStore.lastAngle = angle;
 
   // Escape return here since we can't do anything on the first frame
-  return { rotThrust: 0, aftThrust: 0, userStore: userStore };
+  return {
+      rotThrust: 0,
+      aftThrust: 0,
+      userStore: userStore
+  };
 }
 
 // Calculate Acceleration & Velocity for Linear and Rotation
@@ -49,6 +60,20 @@ userStore.rIntegral += rerror;
 let rotThrust =
   rp * rerror + ri * userStore.rIntegral + rd * (rerror - userStore.rLastErr);
 
+// Plot
+plot({
+  mot_x: motionVector[0],
+  mot_y: motionVector[1],
+  targetAngle: targetAngle,
+  targetVelocity: targetVelocity,
+  aftError: error,
+  aftIntegral: userStore.integral,
+  aftThrust: aftThrust,
+  rotError: rerror,
+  rotIntegral: userStore.rIntegral,
+  rotThrust: rotThrust,
+});
+
 // Store
 userStore.lastErr = error;
 userStore.rLastErr = rerror;
@@ -63,4 +88,8 @@ rotThrust = rotThrust > 1 ? 1 : rotThrust;
 rotThrust = rotThrust < -1 ? -1 : rotThrust;
 
 // Return:
-return { rotThrust: rotThrust, aftThrust: aftThrust, userStore: userStore };
+return {
+  rotThrust: rotThrust,
+  aftThrust: aftThrust,
+  userStore: userStore
+};

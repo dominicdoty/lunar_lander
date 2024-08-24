@@ -15,6 +15,7 @@ export const userCodeFunction = writable(() => {
   return { rotThrust: 0, aftThrust: 0, userStore: {} };
 });
 export const userLogs = writable([]);
+export const userPlots = writable([]);
 export const startupModalDisplayed = writable(false);
 export const runLander = writable(false);
 export const resetLander = writable(false);

@@ -1,5 +1,5 @@
 import { cartToPolar, type Line, type Point } from "./render";
-import { Rotate, deg2rad, userLogs } from "./render";
+import { Rotate, deg2rad, userLogs, userPlots } from "./render";
 import { gground, launchError } from "./game";
 import { aboveGround, findGroundPoint } from "./ground_utils";
 
@@ -17,6 +17,20 @@ let log = (...data: any[]) => {
     });
   }
   logCallNum++;
+};
+
+let plotCallNum = 0;
+const plotRateLimit = 60;
+let plot = (data: {}) => {
+  if (plotCallNum & plotRateLimit) {
+    // Store for plotting
+    userPlots.update((v) => {
+      data["time"] = plotCallNum;
+      v.push(data);
+      return v;
+    });
+  }
+  plotCallNum++;
 };
 
 function wrapAngle(angle: number): number {
@@ -163,6 +177,7 @@ export class LanderPhysics {
         angle: this.angle,
         userStore: this.userStore,
         log: log,
+        plot: plot,
       });
 
       if (!("rotThrust" in userReturn)) {

@@ -16,6 +16,27 @@
   let codeText = "";
   let traceBack = "";
 
+  let plotTest = (data: {}) => {
+    // check for validity here
+    if (typeof data !== "object") {
+      throw new Error(
+        "Data supplied to plot function does not appear to be an object. Expect {my_var:0}"
+      );
+    } else {
+      for (let [k, v] of Object.entries(data)) {
+        if (typeof k !== "string") {
+          throw new Error("All plot data keys expected to be strings");
+        } else if (typeof v !== "number") {
+          throw new Error("All plot data values expected to be numbers");
+        } else if (k == "time") {
+          throw new Error(
+            "The key name 'time' is already used and cannot be used in your plot data"
+          );
+        }
+      }
+    }
+  };
+
   // Set our value from the store
   codeText = $userCode;
 
@@ -35,6 +56,7 @@
           angle: 0,
           userStore: tmpUserStore,
           log: () => {},
+          plot: plotTest,
         });
 
         if (!("rotThrust" in userReturn)) {
@@ -54,7 +76,9 @@
     } catch (error) {
       if (error instanceof Error) {
         error = error as Error;
-        traceBack = `${error.lineNumber}:${error.columnNumber} Error: ${error.message}`;
+        // Removed line/col numbers as they appear to be wrong now
+        // ${error.lineNumber}:${error.columnNumber}
+        traceBack = `Error: ${error.message}`;
       } else {
         traceBack = `Unknown error ${error}`;
       }

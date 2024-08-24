@@ -3,6 +3,7 @@
 @import "bulma/sass/base/_all";
 @import "bulma/sass/components/card.sass";
 @import "bulma/sass/components/modal.sass";
+@import "bulma/sass/components/panel.sass";
 @import "bulma/sass/elements/title.sass";
 @import "bulma/sass/elements/progress.sass";
 @import "bulma/sass/elements/button.sass";
@@ -19,6 +20,19 @@
 .is-float-right {
   @extend .is-narrow;
   margin-left: auto;
+}
+
+.is-rel-borderbox {
+  box-sizing: border-box;
+  position: relative;
+}
+
+.is-fullheight {
+  height: 100%;
+}
+
+.is-fullwidth {
+  width: 100%;
 }
 
 // @import "bulma/sass/elements/_all";

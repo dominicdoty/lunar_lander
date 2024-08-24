@@ -4,7 +4,8 @@ let {
     altitude,
     angle,
     userStore,
-    log
+    log,
+    plot
 } = arguments[0];
 
 // Example of how to initialize user storage
@@ -14,6 +15,11 @@ if (!("store" in userStore)) {
 
 // Example of how to log to the user accessible console
 log("x_pos: ", x_position.toFixed(1));
+
+// Example of how to plot to the plots tab
+plot({
+    altitude: altitude
+});
 
 // Return:
 return {

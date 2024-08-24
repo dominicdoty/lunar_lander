@@ -14,6 +14,7 @@
     landerSuccessState,
     cartToPolar,
     userLogs,
+    userPlots,
   } from "./render";
   import { onMount } from "svelte";
   import { launchError, regenerateGround } from "./game";
@@ -149,6 +150,7 @@
         onClick={() => {
           $runLander = true;
           $userLogs = [];
+          $userPlots = [];
           initialDifficulty = $landerState.getDifficulty();
         }}
       />
