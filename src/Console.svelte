@@ -30,7 +30,7 @@
     style="width:{width}px"
     transition:slide={{ duration: 300, axis: "x" }}
   >
-    <div class="columns is-mobile is-gapless" style="height: 100%;">
+    <div class="columns is-mobile is-gapless is-fullheight">
       <div class="column">
         <div
           class="console"
@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      <div class="column is-narrow" style="width: 5px;">
+      <div class="column is-narrow">
         <div
           class="drag-affordance"
           on:mousedown={(event) => {

@@ -107,7 +107,7 @@
 <!-- NOTE: width/height are set to physical device pixel units (via devicePixelRatio) -->
 <!-- canvas width/height is brought back to CSS pixel units via the style directive -->
 <div
-  class="fullDiv"
+  class="is-fullwidth is-fullheight"
   bind:clientHeight={canvasHeight}
   bind:clientWidth={canvasWidth}
 >
@@ -121,10 +121,3 @@
 </div>
 
 <slot />
-
-<style>
-  .fullDiv {
-    width: 100%;
-    height: 100%;
-  }
-</style>

@@ -85,7 +85,7 @@
   };
 </script>
 
-<div class="textdiv">
+<div class="is-rel-borderbox is-fullheight is-fullwidth has-text-primary p-4">
   <div class="columns">
     <div class="column p-0">
       <Setting description="Scenario" descriptionColWidth="">
@@ -228,14 +228,3 @@
     </div>
   </div>
 </div>
-
-<style>
-  .textdiv {
-    height: 100%;
-    width: 100%;
-    box-sizing: border-box;
-    position: relative;
-    padding: 20px;
-    color: white;
-  }
-</style>

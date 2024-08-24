@@ -124,7 +124,7 @@
   </div>
 </div>
 
-<div class="canvasDiv fullDiv p-1">
+<div class="is-rel-borderbox is-fullheight is-fullwidth p-1">
   <div class="overlay is-right px-2 pt-1">
     <span style="display:inline-block">
       <progress
@@ -134,7 +134,7 @@
         value={localFuelLevel}
         max="100"
       />
-      <div class="columns is-mobile is-size-7 has-text-white">
+      <div class="columns is-mobile is-size-7 has-text-primary">
         <div class="column is-narrow">
           Fuel: {localFuelLevel.toFixed(0)}
         </div>
@@ -167,7 +167,7 @@
     </span>
   </div>
 
-  <div class="overlay is-left is-bottom" style="width:100%">
+  <div class="overlay is-left is-bottom is-fullwidth">
     <div class="columns is-mobile p-2">
       <div class="column">
         <div class={"err p-1 " + (traceBack != "" ? "" : "is-hidden")}>
@@ -191,22 +191,13 @@
     <Background color="hsl(0, 0%, 10%)">
       <DotGrid color="hsla(0, 0%, 100%, 0.5)" />
       <FPS />
-      <Ground color="white" ground_pix_per_seg={5} ground_noise={10} />
+      <Ground color="#dee2e6" ground_pix_per_seg={5} ground_noise={10} />
       <Lander />
     </Background>
   </Canvas>
 </div>
 
 <style>
-  .fullDiv {
-    width: 100%;
-    height: 100%;
-  }
-  .canvasDiv {
-    box-sizing: border-box;
-    position: relative;
-  }
-
   .overlay {
     position: absolute;
     z-index: 1;

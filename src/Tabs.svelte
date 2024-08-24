@@ -22,7 +22,10 @@
   });
 </script>
 
-<div class="outerContainer" style="padding:{outerAppPadding}px">
+<div
+  class="outerContainer is-fullwidth is-fullheight"
+  style="padding:{outerAppPadding}px"
+>
   <div class="columns is-mobile mb-0">
     <div class="column is-narrow pb-0">
       <ul bind:clientHeight={headerHeight}>
@@ -48,8 +51,6 @@
 
 <style>
   .outerContainer {
-    height: 100%;
-    width: 100%;
     box-sizing: border-box;
   }
 
@@ -64,8 +65,8 @@
   ul {
     display: flex;
     flex-wrap: wrap;
-    padding: 0;
     list-style: none;
+    padding: 0;
     margin: 0;
   }
 
@@ -75,23 +76,21 @@
   }
 
   menuitem {
-    border: 1px solid transparent;
-    border-color: #495057;
+    border: 1px solid #495057;
     border-bottom-color: #dee2e6;
-    border-top-left-radius: 0.25rem;
-    border-top-right-radius: 0.25rem;
+    border-radius: 0.25rem 0.25rem 0 0;
     display: block;
     padding: 0.5rem 1rem;
     cursor: pointer;
   }
 
   menuitem:hover {
-    border-color: #e9ecef #e9ecef #dee2e6;
+    border-color: #dee2e6;
   }
 
   li.active > menuitem {
     color: #495057;
-    background-color: #fff;
-    border-color: #dee2e6 #dee2e6 #fff;
+    background-color: #dee2e6;
+    border-color: #dee2e6;
   }
 </style>
