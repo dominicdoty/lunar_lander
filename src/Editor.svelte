@@ -1,10 +1,8 @@
 <script lang="ts">
   import { runNoConsole } from "./helper";
   import { userCodeFunction, runLander, userCode } from "./render";
-  import initialCode from "./default_editor_contents.js?raw";
 
   import CodeMirror from "svelte-codemirror-editor";
-
   import type { EditorView } from "@codemirror/view";
   import { javascript } from "@codemirror/lang-javascript";
   import { barf as codetheme } from "thememirror";
@@ -17,11 +15,6 @@
 
   let codeText = "";
   let traceBack = "";
-
-  // Set the store if it hasn't been yet
-  if ($userCode == "") {
-    $userCode = initialCode;
-  }
 
   // Set our value from the store
   codeText = $userCode;

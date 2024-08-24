@@ -1,6 +1,7 @@
 import { derived, writable } from "svelte/store";
 import { aboveGround } from "./ground_utils";
 import { LanderPhysics } from "./lander";
+import initialCode from "./default_editor_contents.js?raw";
 
 export const outerAppPadding = 10; // px
 export const innerAppPadding = 5; // px
@@ -9,7 +10,7 @@ export const innerAppPadding = 5; // px
 export type Point = [number, number];
 export type Line = Point[];
 
-export const userCode = writable("");
+export const userCode = writable(initialCode);
 export const userCodeFunction = writable(() => {
   return { rotThrust: 0, aftThrust: 0, userStore: {} };
 });
