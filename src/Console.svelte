@@ -33,7 +33,7 @@
     <div class="columns is-mobile is-gapless is-fullheight">
       <div class="column">
         <div
-          class="console"
+          class="console has-background-primary"
           on:click={() => (isExpanded = false)}
           on:keypress={() => (isExpanded = false)}
         >
@@ -95,6 +95,7 @@
     background-color: #dee2e6;
     border-radius: 0 0.5rem 0.5rem 0;
     writing-mode: vertical-lr;
+    cursor: pointer;
 
     /* Center Vertically */
     margin: 0;
@@ -105,20 +106,20 @@
   }
 
   .drag-affordance {
-    background-color: #dee2e6;
-    width: 5px;
+    background-color: #15191e;
+    cursor: pointer;
+    outline: 1px solid #dee2e6;
+    width: 6px;
     height: 3em;
     z-index: 2;
     position: absolute;
-    right: 0px;
+    right: -3px;
     top: 50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
   }
 
   .console {
-    background-color: #404040;
-    opacity: 0.9;
     height: 100%;
     padding-right: 5px;
     color: #dee2e6;
