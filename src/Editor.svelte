@@ -107,11 +107,22 @@
 <!-- Attach ctrl+shift+F to autoformat -->
 <Hotkey keys={["Control", "Shift", "F"]} action={autoformat} />
 
-<div class="textdiv p-4">
-  <div class="buttonoverlay p-2">
-    <button class="button" title="ctrl+shift+F" on:click={autoformat}>
-      Autoformat
-    </button>
+<div class="textdiv is-rel-borderbox is-fullwidth p-4">
+  <div class="format-button-overlay p-1">
+    <div class="columns">
+      <div class="column"></div>
+      {#if traceBack != ""}
+        <div class="column error-message p-3 m-1 is-narrow">
+          {traceBack}
+        </div>
+      {/if}
+      <!-- <li class="m-1"> -->
+      <div class="column is-narrow p-1">
+        <button class="button" title="ctrl+shift+F" on:click={autoformat}>
+          Autoformat
+        </button>
+      </div>
+    </div>
   </div>
 
   <CodeMirror
@@ -121,41 +132,29 @@
     theme={codetheme}
     lang={javascript()}
   />
-
-  {#if traceBack != ""}
-    <div class="erroroverlay">
-      <div class="p-3">{traceBack}</div>
-    </div>
-  {/if}
 </div>
 
 <style>
   .textdiv {
     min-height: 100%;
-    width: 100%;
     margin-bottom: 1em;
     background-color: #15191e;
-    box-sizing: border-box;
-    position: relative;
     outline: 1px solid #dee2e6;
     border-radius: 0 0.5rem 0.5rem 0.5rem;
   }
 
-  .buttonoverlay {
+  .format-button-overlay {
+    z-index: 10;
     right: 0px;
     top: 0px;
-    z-index: 10;
-    position: absolute;
+    position: sticky;
   }
 
-  .erroroverlay {
-    left: 0px;
-    bottom: 0px;
-    width: 100%;
-    position: absolute;
+  .error-message {
     background-color: darkred;
-    border-radius: 0 0 0.5rem 0.5rem;
-    opacity: 0.9;
+    border-radius: 0.5rem;
+    line-height: 1em;
+    opacity: 0.8;
     color: white;
   }
 </style>
