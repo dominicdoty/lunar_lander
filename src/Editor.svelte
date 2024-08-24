@@ -4,10 +4,13 @@
   import initialCode from "./default_editor_contents.js?raw";
 
   import CodeMirror from "svelte-codemirror-editor";
+
+  import type { EditorView } from "@codemirror/view";
   import { javascript } from "@codemirror/lang-javascript";
   import { barf as codetheme } from "thememirror";
 
   import { js_beautify } from "js-beautify";
+  import Hotkey from "./Hotkey.svelte";
 
   // Stop lander running when we go back to launch tab
   $runLander = false;
@@ -63,22 +66,40 @@
       }
     }
   });
+
+  // Attached to CodeMirror object to allow us to attempt to reset
+  // cursor location after formatting
+  let view: EditorView;
+
+  function autoformat() {
+    let oldPos = view.state.selection.ranges[0].from;
+    let oldLen = view.state.doc.length;
+
+    // Format and update displayed/stored code
+    let fmtText = js_beautify(codeText);
+    $userCode = fmtText;
+    view.dispatch({ changes: { from: 0, to: oldLen, insert: fmtText } });
+
+    // Attempt to reset cursor position
+    view.focus();
+    view.dispatch({ selection: { anchor: oldPos, head: oldPos } });
+  }
 </script>
+
+<!-- Attach ctrl+shift+F to autoformat -->
+<Hotkey keys={["Control", "Shift", "F"]} action={autoformat} />
 
 <div class="textdiv p-4">
   <div class="buttonoverlay p-2">
-    <button
-      class="button"
-      on:click={() => {
-        codeText = js_beautify(codeText);
-        $userCode = codeText;
-      }}>Autoformat</button
-    >
+    <button class="button" title="ctrl+shift+F" on:click={autoformat}>
+      Autoformat
+    </button>
   </div>
 
   <CodeMirror
     bind:value={codeText}
     on:change={() => ($userCode = codeText)}
+    on:ready={(e) => (view = e.detail)}
     theme={codetheme}
     lang={javascript()}
   />
