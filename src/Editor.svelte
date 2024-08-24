@@ -1,25 +1,16 @@
 <script lang="ts">
   import { runNoConsole } from "./helper";
   import { userCodeFunction, runLander, userCode } from "./render";
+  import initialCode from "./default_editor_contents.js?raw";
 
   import CodeMirror from "svelte-codemirror-editor";
   import { javascript } from "@codemirror/lang-javascript";
   import { barf as codetheme } from "thememirror";
 
+  import { js_beautify } from "js-beautify";
+
   // Stop lander running when we go back to launch tab
   $runLander = false;
-
-  const initialCode =
-    `// Arguments:\n` +
-    `let {x_position, altitude, angle, userStore} = arguments[0];\n` +
-    `\n` +
-    `// Example of how to initialize user storage\n` +
-    `if (!("store" in userStore)) {\n` +
-    `  userStore.store = 0;\n` +
-    `}\n` +
-    `\n` +
-    `// Return:\n` +
-    `return { rotThrust:0, aftThrust:0, userStore:userStore };\n`;
 
   let codeText = "";
   let traceBack = "";
@@ -75,6 +66,16 @@
 </script>
 
 <div class="textdiv p-4">
+  <div class="buttonoverlay p-2">
+    <button
+      class="button"
+      on:click={() => {
+        codeText = js_beautify(codeText);
+        $userCode = codeText;
+      }}>Autoformat</button
+    >
+  </div>
+
   <CodeMirror
     bind:value={codeText}
     on:change={() => ($userCode = codeText)}
@@ -99,6 +100,13 @@
     position: relative;
     outline: 1px solid #dee2e6;
     border-radius: 0 0.5rem 0.5rem 0.5rem;
+  }
+
+  .buttonoverlay {
+    right: 0px;
+    top: 0px;
+    z-index: 10;
+    position: absolute;
   }
 
   .erroroverlay {
