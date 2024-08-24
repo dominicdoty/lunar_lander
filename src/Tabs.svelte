@@ -20,12 +20,6 @@
   onMount(() => {
     handleResize();
   });
-
-  onMount(async () => {
-    for (let i = 0; i < items.length; i++) {
-      items[i].component = (await import(items[i].component)).default;
-    }
-  });
 </script>
 
 <div class="outerContainer" style="padding:{outerAppPadding}px">
@@ -44,11 +38,7 @@
   <div class="tabBox" style="width:{tw.width}px; height:{tw.height}px;">
     {#each items as item}
       {#if activeTabValue == item.value}
-        {#if typeof item.component === "string" || item.component instanceof String}
-          Loading
-        {:else}
-          <svelte:component this={item.component} />
-        {/if}
+        <svelte:component this={item.component} />
       {/if}
     {/each}
   </div>

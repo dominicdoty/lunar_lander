@@ -1,11 +1,13 @@
 <script>
   import "./global.css";
+  import LanderTab from "./LanderTab.svelte";
+  import Editor from "./Editor.svelte";
   import Tabs from "./Tabs.svelte";
+  import OptionsTab from "./OptionsTab.svelte";
   import { urlDecodeSettings } from "./settings";
   import { onMount } from "svelte";
   import { userCode, userCodeFunction } from "./render";
 
-  // Decode settings on load
   onMount(() => {
     urlDecodeSettings();
     try {
@@ -17,9 +19,9 @@
   });
 
   let items = [
-    { label: "Launch", value: 1, component: "./LanderTab.svelte" },
-    { label: "Editor", value: 2, component: "./Editor.svelte" },
-    { label: "Options", value: 3, component: "./OptionsTab.svelte" },
+    { label: "Launch", value: 1, component: LanderTab },
+    { label: "Editor", value: 2, component: Editor },
+    { label: "Options", value: 3, component: OptionsTab },
   ];
 </script>
 
