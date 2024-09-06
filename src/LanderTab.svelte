@@ -130,7 +130,7 @@
       <progress
         class="progress m-0 is-small {localFuelLevel < 25
           ? 'is-danger'
-          : 'is-primary'}"
+          : 'is-success'}"
         value={localFuelLevel}
         max="100"
       />
