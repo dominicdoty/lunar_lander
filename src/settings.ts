@@ -66,18 +66,16 @@ export function blobToSettings(stringBlob: string): Options {
     userCode.set(code);
   }
 
-  // Check for all required fields
   let newopts = new Options();
-  for (var prop in newopts.defaults) {
-    if (!(prop in opts) || !(typeof newopts[prop] == typeof opts[prop])) {
-      throw EvalError(
-        "Parsed string does not resolve to a legal options set. " +
-          prop +
-          " " +
-          newopts[prop] +
-          " " +
-          opts[prop]
-      );
+
+  // Remove any unrecognized or default options from opts
+  for (let prop in opts) {
+    if (
+      !(prop in newopts.defaults) ||
+      !(typeof newopts[prop] == typeof opts[prop]) ||
+      newopts[prop] == opts[prop]
+    ) {
+      delete opts[prop];
     }
   }
 
@@ -85,7 +83,7 @@ export function blobToSettings(stringBlob: string): Options {
   Object.assign(newopts, opts);
 
   // Set store
-  options.set(opts);
+  options.set(newopts);
 }
 
 export function settingsToBlob(options: Options, code: string = "") {
