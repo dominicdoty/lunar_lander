@@ -29,7 +29,6 @@
   let textDivDimensions = writable({ width: 0, height: 0 });
 
   onMount(() => {
-    console.log("montin");
     chart = c3.generate({
       bindto: "#plotarea",
       data: {
