@@ -8,9 +8,9 @@ export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
 
 let logCallNum = 0;
-const logRateLimit = 60;
+const logRateLimit = 10;
 let log = (...data: any[]) => {
-  if (logCallNum % logRateLimit) {
+  if (logCallNum % logRateLimit == 0) {
     userLogs.update((v) => {
       v.push(data.join(""));
       return v;
@@ -20,9 +20,9 @@ let log = (...data: any[]) => {
 };
 
 let plotCallNum = 0;
-const plotRateLimit = 60;
+const plotRateLimit = 10;
 let plot = (data: {}) => {
-  if (plotCallNum & plotRateLimit) {
+  if (plotCallNum % plotRateLimit == 0) {
     // Store for plotting
     userPlots.update((v) => {
       data["time"] = plotCallNum;
