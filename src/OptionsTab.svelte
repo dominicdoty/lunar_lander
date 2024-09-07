@@ -24,6 +24,16 @@
         [0.99, 1.0],
       ],
     },
+    Hoverslam: {
+      allowableAftThrottle: [
+        [0.0, 0.01],
+        [0.6, 1.0],
+      ],
+      allowableRotThrottle: [
+        [0.0, 0.01],
+        [0.99, 1.0],
+      ],
+    },
     "Apollo: 0%, 10-60%, 100% + RCS": {
       allowableAftThrottle: [
         [0.0, 0.01],
@@ -74,7 +84,7 @@
       rotationalVelocityRandomize: false,
       rotationalVelocityRandomizeMagnitude: 0,
       groundVariability: 100,
-      thrusters: "20% Min Throt + RCS",
+      thrusters: "Hoverslam",
     },
     Ballistic: {
       enableFuel: true,
@@ -93,7 +103,7 @@
       rotationalVelocityRandomize: true,
       rotationalVelocityRandomizeMagnitude: 0.1,
       groundVariability: 100,
-      thrusters: "Apollo: 0%, 10-60%, 100% + RCS",
+      thrusters: "20% Min Throt + RCS",
     },
     "Tumbling Ballistic": {
       enableFuel: true,
