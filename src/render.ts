@@ -1,6 +1,7 @@
 import { derived, writable } from "svelte/store";
+import type { Writable } from "svelte/store";
+import type { LanderPhysics } from "./lander";
 import { aboveGround } from "./ground_utils";
-import { LanderPhysics } from "./lander";
 import initialCode from "./default_editor_contents.js?raw";
 
 export const outerAppPadding = 10; // px
@@ -20,9 +21,7 @@ export const startupModalDisplayed = writable(false);
 export const runLander = writable(false);
 export const resetLander = writable(false);
 export const landerSuccessState = writable("");
-export const landerState = writable(
-  new LanderPhysics([0, 0], [0, 0], 0, 0, () => {}, false, false)
-);
+export const landerState: Writable<LanderPhysics> = writable();
 
 /** Coordinate system view
  * used to represent internal game coordinate space, and render view space
