@@ -42,6 +42,75 @@ function wrapAngle(angle: number): number {
   return angle;
 }
 
+function sortArrayOfPairs(arr: Array<Array<number>>): Array<Array<number>> {
+  // Sort pairs first
+  let pairSortedArr = arr.map((pair) => {
+    let [a, b] = pair;
+    if (a > b) {
+      return [b, a];
+    } else {
+      return [a, b];
+    }
+  });
+
+  // Sort outer second
+  pairSortedArr.sort((a, b) => {
+    if (a[0] > b[0]) {
+      return 1;
+    } else {
+      return -1;
+    }
+  });
+
+  return pairSortedArr;
+}
+
+function getNearerOfTwo(value: number, low: number, high: number): number {
+  if (value - low < (high - low) / 2) {
+    value = low;
+  } else {
+    value = high;
+  }
+
+  return value;
+}
+
+function snapToLimits(
+  value: number,
+  name: string,
+  limits: Array<Array<number>>
+): number {
+  let lastExceeded = 0;
+
+  for (let i = 0; i < limits.length; i++) {
+    const [low, high] = limits[i];
+
+    // Fastpath checks
+    if (value >= low && value <= high) {
+      return value;
+    }
+
+    // Too big for this set, keep looking
+    if (value > high) {
+      lastExceeded = high;
+      continue;
+    }
+
+    // Too small for this set
+    if (value < low) {
+      // Find the closer of the last limit we exceeded and the current lower bound
+      value = getNearerOfTwo(value, lastExceeded, low);
+      launchError.set(`${name} clipped to ${value.toFixed(2)}`);
+      return value;
+    }
+  }
+
+  // Catch when we fall off the end without finding a limit
+  value = lastExceeded;
+  launchError.set(`${name} clipped to ${value.toFixed(2)}`);
+  return value;
+}
+
 export class LanderPhysics {
   // Set Values
   pos: Point; // pixels
@@ -51,6 +120,8 @@ export class LanderPhysics {
   userAutoPilot: Function;
   enableFuel: boolean; // enforce running out of fuel
   enableFuelMass: boolean; // account for mass of fuel (requires enableFuel)
+  allowableAftThrottle: Array<Array<number>>; // array of tuples representing allowable throttle ranges
+  allowableRotThrottle: Array<Array<number>>;
 
   // Static Values
   gravity: number;
@@ -86,7 +157,9 @@ export class LanderPhysics {
     rotVel: number,
     userAutoPilot: Function,
     enableFuel: boolean,
-    enableFuelMass: boolean
+    enableFuelMass: boolean,
+    allowableAftThrottle: Array<Array<number>>,
+    allowableRotThrottle: Array<Array<number>>
   ) {
     // Set Values
     this.pos = starting_pos;
@@ -96,6 +169,8 @@ export class LanderPhysics {
     this.userAutoPilot = userAutoPilot;
     this.enableFuel = enableFuel;
     this.enableFuelMass = enableFuelMass;
+    this.allowableAftThrottle = sortArrayOfPairs(allowableAftThrottle);
+    this.allowableRotThrottle = sortArrayOfPairs(allowableRotThrottle);
 
     // Static Values
     this.gravity = 1 / 60;
@@ -212,21 +287,17 @@ export class LanderPhysics {
       launchError.set("rotThrust not finite!");
     }
 
-    if (this.aftThrust < 0) {
-      this.aftThrust = 0;
-      launchError.set("aftThrust clipped!");
-    } else if (this.aftThrust > 1) {
-      this.aftThrust = 1;
-      launchError.set("aftThrust clipped!");
-    }
-
-    if (this.rotThrust < -1) {
-      this.rotThrust = -1;
-      launchError.set("rotThrust clipped!");
-    } else if (this.rotThrust > 1) {
-      this.rotThrust = 1;
-      launchError.set("rotThrust clipped!");
-    }
+    // Snap to limits
+    this.aftThrust = snapToLimits(
+      this.aftThrust,
+      "aftThrust",
+      this.allowableAftThrottle
+    );
+    this.rotThrust = snapToLimits(
+      this.rotThrust,
+      "rotThrust",
+      this.allowableRotThrottle
+    );
 
     // Update Fuel Levels (track separate from mass since dynamic mass may not be enabled)
     this.fuelLevel -=

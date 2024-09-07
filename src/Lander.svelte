@@ -14,7 +14,6 @@
     Explosion,
     landerSuccessState,
     cartToPolar,
-    userLogs,
   } from "./render";
   import type { Point, Line } from "./render";
   import { renderable, gground } from "./game";
@@ -71,7 +70,9 @@
       startRotVel, // rotVel
       $userCodeFunction, // userAutoPilot
       $options.enableFuel, // enableFuel
-      $options.enableFuelMass // enableFuelMass
+      $options.enableFuelMass, // enableFuelMass
+      $options.allowableAftThrottle, // allowableAftThrottle
+      $options.allowableRotThrottle // allowableRotThrottle
     );
 
     $landerState = lander;
@@ -96,6 +97,7 @@
       } catch (err) {
         lander.isAboveGround = false;
         $runLander = false;
+        console.error(err);
       }
 
       $landerState = lander;

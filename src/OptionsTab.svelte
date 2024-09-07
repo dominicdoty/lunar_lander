@@ -9,6 +9,34 @@
   // Stop lander running when we go back to launch tab
   $runLander = false;
 
+  let thrusterChoices = {
+    "No Limitations": {
+      allowableAftThrottle: [[0.0, 1.0]],
+      allowableRotThrottle: [[0.0, 1.0]],
+    },
+    "20% Min Throt + RCS": {
+      allowableAftThrottle: [
+        [0.0, 0.01],
+        [0.2, 1.0],
+      ],
+      allowableRotThrottle: [
+        [0.0, 0.01],
+        [0.99, 1.0],
+      ],
+    },
+    "Apollo: 0%, 10-60%, 100% + RCS": {
+      allowableAftThrottle: [
+        [0.0, 0.01],
+        [0.1, 0.6],
+        [0.99, 1.0],
+      ],
+      allowableRotThrottle: [
+        [0.0, 0.01],
+        [0.99, 1.0],
+      ],
+    },
+  };
+
   let scenarioChoices = {
     Vertical: {
       enableFuel: false,
@@ -27,6 +55,7 @@
       rotationalVelocityRandomize: false,
       rotationalVelocityRandomizeMagnitude: 0,
       groundVariability: 100,
+      thrusters: "No Limitations",
     },
     Rotated: {
       enableFuel: false,
@@ -45,6 +74,7 @@
       rotationalVelocityRandomize: false,
       rotationalVelocityRandomizeMagnitude: 0,
       groundVariability: 100,
+      thrusters: "20% Min Throt + RCS",
     },
     Ballistic: {
       enableFuel: true,
@@ -63,6 +93,7 @@
       rotationalVelocityRandomize: true,
       rotationalVelocityRandomizeMagnitude: 0.1,
       groundVariability: 100,
+      thrusters: "Apollo: 0%, 10-60%, 100% + RCS",
     },
     "Tumbling Ballistic": {
       enableFuel: true,
@@ -80,7 +111,8 @@
       rotationalVelocity: 0,
       rotationalVelocityRandomize: true,
       rotationalVelocityRandomizeMagnitude: 3,
-      groundVariability: 200,
+      groundVariability: 100,
+      thrusters: "Apollo: 0%, 10-60%, 100% + RCS",
     },
   };
 </script>
@@ -103,6 +135,13 @@
           inputType="boolean"
           store={options}
           key="enableFuelMass"
+        />
+      </Setting>
+      <Setting description="Throttle Limited Thrusters" descriptionColWidth="">
+        <SettingChoice
+          store={options}
+          key="thrusters"
+          choices={thrusterChoices}
         />
       </Setting>
       <Setting description="Starting Altitude">

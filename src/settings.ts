@@ -22,6 +22,9 @@ export class Options {
   rotationalVelocityRandomizeMagnitude: number;
   groundVariability: number;
   groundSeed: string;
+  thrusters: string;
+  allowableAftThrottle: Array<Array<number>>;
+  allowableRotThrottle: Array<Array<number>>;
   scenario: string;
 
   defaults = {
@@ -42,6 +45,9 @@ export class Options {
     rotationalVelocityRandomizeMagnitude: 0,
     groundVariability: 100,
     groundSeed: reSeedGround(),
+    thrusters: "No Limitations",
+    allowableAftThrottle: [[0.0, 1.0]],
+    allowableRotThrottle: [[0.0, 1.0]],
     scenario: "Vertical",
   };
 
