@@ -146,7 +146,7 @@
   .format-button-overlay {
     z-index: 10;
     right: 0px;
-    top: 0px;
+    top: 10px;
     position: sticky;
   }
 
