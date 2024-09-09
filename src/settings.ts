@@ -47,7 +47,7 @@ export class Options {
     groundSeed: reSeedGround(),
     thrusters: "No Limitations",
     allowableAftThrottle: [[0.0, 1.0]],
-    allowableRotThrottle: [[0.0, 1.0]],
+    allowableRotThrottle: [[-1.0, 1.0]],
     scenario: "Vertical",
   };
 

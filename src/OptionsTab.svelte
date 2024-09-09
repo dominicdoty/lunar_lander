@@ -12,7 +12,7 @@
   let thrusterChoices = {
     "No Limitations": {
       allowableAftThrottle: [[0.0, 1.0]],
-      allowableRotThrottle: [[0.0, 1.0]],
+      allowableRotThrottle: [[-1.0, 1.0]],
     },
     "20% Min Throt + RCS": {
       allowableAftThrottle: [
@@ -20,7 +20,8 @@
         [0.2, 1.0],
       ],
       allowableRotThrottle: [
-        [0.0, 0.01],
+        [-1.0, -0.99],
+        [-0.01, 0.01],
         [0.99, 1.0],
       ],
     },
@@ -30,7 +31,8 @@
         [0.6, 1.0],
       ],
       allowableRotThrottle: [
-        [0.0, 0.01],
+        [-1.0, -0.99],
+        [-0.01, 0.01],
         [0.99, 1.0],
       ],
     },
@@ -41,7 +43,8 @@
         [0.99, 1.0],
       ],
       allowableRotThrottle: [
-        [0.0, 0.01],
+        [-1.0, -0.99],
+        [-0.01, 0.01],
         [0.99, 1.0],
       ],
     },
