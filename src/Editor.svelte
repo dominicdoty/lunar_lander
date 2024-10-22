@@ -94,7 +94,7 @@
     let oldLen = view.state.doc.length;
 
     // Format and update displayed/stored code
-    let fmtText = js_beautify(codeText);
+    let fmtText = js_beautify(codeText, { indent_size: 2 });
     $userCode = fmtText;
     view.dispatch({ changes: { from: 0, to: oldLen, insert: fmtText } });
 
