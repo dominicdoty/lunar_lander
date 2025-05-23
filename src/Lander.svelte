@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Point, Line } from "./types";
   import {
     runLander,
     resetLander,
@@ -15,7 +16,7 @@
     landerSuccessState,
     cartToPolar,
   } from "./render";
-  import type { Point, Line } from "./render";
+
   import { renderable, gground } from "./game";
   import { options } from "./settings";
   import { LanderPhysics } from "./lander";

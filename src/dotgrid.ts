@@ -1,6 +1,7 @@
 import { derived } from "svelte/store";
 import { gground } from "./game";
-import { VW, type CoordinateSpace, type Line, type Point } from "./render";
+import { type Line, type Point } from "./types";
+import { VW, type CoordinateSpace } from "./render";
 
 export let spacing = 50;
 

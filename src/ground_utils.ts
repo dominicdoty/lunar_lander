@@ -1,4 +1,4 @@
-import type { Point, Line } from "./render";
+import type { Point, Line } from "./types";
 
 export function reSeedGround() {
   return btoa(Math.random().toFixed(16));
@@ -89,26 +89,23 @@ export function genGround(
  * @param p point of interest
  * @returns ground point closest to directly below supplied point and a hint
  */
-export function findGroundPoint(
-  ground: Line,
-  p: Point
-): [Point, boolean] {
+export function findGroundPoint(ground: Line, p: Point): [Point, boolean] {
   // Calculate expected index of ground point
   // based on ground len over delta pixels
-  let idxPerGpx = (ground.length) / (ground[ground.length - 1][0] - ground[0][0])
-  let idx = Math.round(p[0] * idxPerGpx)
+  let idxPerGpx = ground.length / (ground[ground.length - 1][0] - ground[0][0]);
+  let idx = Math.round(p[0] * idxPerGpx);
 
   // Saturate
-  let satuated = false
+  let satuated = false;
   if (idx < 0) {
     idx = 0;
-    satuated = true
+    satuated = true;
   } else if (idx > ground.length - 1) {
     idx = ground.length - 1;
-    satuated = true
+    satuated = true;
   }
 
-  return [ground[idx], satuated]
+  return [ground[idx], satuated];
 }
 
 /**
@@ -116,10 +113,7 @@ export function findGroundPoint(
  * @param p point of interest
  * @returns t/f point above ground, hint for next call
  */
-export function aboveGround(
-  ground: Line,
-  p: Point
-): boolean {
+export function aboveGround(ground: Line, p: Point): boolean {
   let [gp, sat] = findGroundPoint(ground, p);
-  return (p[1] > gp[1]) && !sat;
+  return p[1] > gp[1] && !sat;
 }

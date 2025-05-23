@@ -1,7 +1,7 @@
 <script lang="ts">
+  import type { Point } from "./types";
   import { renderable, gground, regenerateGround } from "./game";
   import { options } from "./settings";
-  import type { Point } from "./render";
   import { path2DCreate, VW } from "./render";
   import { genGround, reSeedGround } from "./ground_utils";
   import { Prng } from "./pseudo_random";

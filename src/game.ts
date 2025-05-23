@@ -1,6 +1,6 @@
 import { getContext, onMount } from "svelte";
 import { writable, derived } from "svelte/store";
-import type { Line } from "./render";
+import type { Line } from "./types";
 
 // View Window
 export const width = writable(window.innerWidth);

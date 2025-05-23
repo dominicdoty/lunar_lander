@@ -1,4 +1,5 @@
-import { cartToPolar, type Line, type Point } from "./render";
+import { cartToPolar } from "./render";
+import { type Line, type Point } from "./types";
 import { Rotate, deg2rad, userLogs, userPlots } from "./render";
 import { gground, launchError } from "./game";
 import { aboveGround, findGroundPoint } from "./ground_utils";
