@@ -1,16 +1,14 @@
 <script lang="ts">
-  import { runNoConsole } from "./helper";
+  import { validateUserReturn, runNoConsole } from "./utils";
   import { userCodeFunction, runLander, userCode } from "./render";
+  import { options } from "./settings";
+  import Hotkey from "./Hotkey.svelte";
 
   import CodeMirror from "svelte-codemirror-editor";
   import type { EditorView } from "@codemirror/view";
   import { javascript } from "@codemirror/lang-javascript";
   import { barf as codetheme } from "thememirror";
-
   import { js_beautify } from "js-beautify";
-  import Hotkey from "./Hotkey.svelte";
-  import { validateUserReturn } from "./utils";
-  import { options } from "./settings";
 
   // Stop lander running when we go back to launch tab
   $runLander = false;
