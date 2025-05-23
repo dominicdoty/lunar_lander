@@ -225,14 +225,12 @@ export class LanderPhysics {
     this.angle = wrapAngle(this.angle);
 
     // Find position of each corner of the lander bounding box
-    for (let corner of this.getBbox()) {
-      // Check for below ground
-      this.isAboveGround = aboveGround(this.ground, corner);
-
-      if (!this.isAboveGround) {
-        break;
-      }
-    }
+    this.isAboveGround = this.getBbox().reduce(
+      (allAbove: boolean, corner: Point) => {
+        return allAbove && aboveGround(this.ground, corner);
+      },
+      true
+    );
   }
 
   getLanderSuccessState() {
