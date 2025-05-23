@@ -9,6 +9,7 @@ import {
   validateUserReturn,
   cartToPolar,
   deg2rad,
+  addPoints,
 } from "./utils";
 
 export const crashVelocityLimit = 1;
@@ -211,14 +212,11 @@ export class LanderPhysics {
     this.rotAccel = this.rotThrust / this.mass; // mass isn't really accurate here as it should be rotational inertia
 
     // Update speed
-    this.linVel = [
-      this.linVel[0] + this.linAccel[0],
-      this.linVel[1] + this.linAccel[1],
-    ];
+    this.linVel = addPoints(this.linVel, this.linAccel);
     this.rotVel = this.rotVel + this.rotAccel;
 
     // Update position
-    this.pos = [this.pos[0] + this.linVel[0], this.pos[1] + this.linVel[1]];
+    this.pos = addPoints(this.pos, this.linVel);
     this.angle = this.angle + this.rotVel;
 
     // Wrap angle to keep it -180 - +180

@@ -232,3 +232,10 @@ export function makeSafe(n: string | number, def: number) {
     return safeN;
   }
 }
+
+export function addPoints(...points: Point[]): Point {
+  return points.reduce(
+    (prev: Point, cur: Point) => [prev[0] + cur[0], prev[1] + cur[1]],
+    [0, 0]
+  );
+}
