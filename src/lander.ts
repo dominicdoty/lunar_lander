@@ -7,31 +7,33 @@ export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
 
-let logCallNum = 0;
-const logRateLimit = 10;
-let log = (...data: any[]) => {
-  if (logCallNum % logRateLimit == 0) {
-    userLogs.update((v) => {
-      v.push(data.join(""));
-      return v;
-    });
-  }
-  logCallNum++;
+let rateLimitedCall = (
+  acceptInterval: number,
+  call: (callNum: number, ...args: any) => void
+) => {
+  let callNum = 0;
+  return (...args: any) => {
+    if (callNum % acceptInterval == 0) {
+      call(callNum, ...args);
+    }
+    callNum++;
+  };
 };
 
-let plotCallNum = 0;
-const plotRateLimit = 10;
-let plot = (data: {}) => {
-  if (plotCallNum % plotRateLimit == 0) {
-    // Store for plotting
-    userPlots.update((v) => {
-      data["time"] = plotCallNum;
-      v.push(data);
-      return v;
-    });
-  }
-  plotCallNum++;
-};
+let log = rateLimitedCall(10, (callNum: number, ...data: any) => {
+  userLogs.update((v) => {
+    v.push([callNum, data.join("")]);
+    return v;
+  });
+});
+
+let plot = rateLimitedCall(10, (callNum: number, data: {}) => {
+  userPlots.update((v) => {
+    data["time"] = callNum;
+    v.push(data);
+    return v;
+  });
+});
 
 function wrapAngle(angle: number): number {
   angle = (angle + 180) % 360;

@@ -45,7 +45,7 @@
               </tr>
             </thead>
             <tbody>
-              {#each $userLogs as log, idx}
+              {#each $userLogs as [idx, log]}
                 <tr>
                   <td>{idx}</td>
                   <td>{log}</td>
