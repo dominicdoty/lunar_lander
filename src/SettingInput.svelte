@@ -2,7 +2,7 @@
   import type { Writable } from "svelte/store";
   import type { Options } from "./settings";
   import { onMount } from "svelte";
-  import { makeSafe } from "./render";
+  import { makeSafe } from "./utils";
 
   export let inputType: string;
   export let store: Writable<Options>;

@@ -6,17 +6,19 @@
     landerState,
     userCodeFunction,
     canvasRenderLine,
-    deg2rad,
-    randomizeNumber,
-    randomizeVector,
     Rotate,
     canvasRenderPoint,
     Translate,
     Explosion,
     landerSuccessState,
-    cartToPolar,
   } from "./render";
 
+  import {
+    randomizeVector,
+    cartToPolar,
+    deg2rad,
+    randomizeNumber,
+  } from "./utils";
   import { renderable, gground } from "./game";
   import { options } from "./settings";
   import { LanderPhysics } from "./lander";

@@ -1,3 +1,5 @@
+import type { Point } from "./types";
+
 export function getNearerOfTwo(
   value: number,
   low: number,
@@ -169,5 +171,64 @@ export function runNoConsole(f: (a0: any) => any, args: { any: any }) {
     Object.keys(methods).forEach((method) => {
       window.console[method] = methods[method];
     });
+  }
+}
+
+export function polarToCart(mag: number, angle: number): Point {
+  return [mag * Math.sin(deg2rad(angle)), mag * Math.cos(deg2rad(angle))];
+}
+
+export function cartToPolar(cart: Point): [mag: number, ang: number] {
+  let [x, y] = cart;
+  let mag = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  let angle = -1 * (rad2deg(Math.atan2(y, x)) - 90);
+  return [mag, angle];
+}
+
+export function randomizeVector(
+  startMag: string | number,
+  startAngle: string | number,
+  randomize: boolean,
+  factorMag: string | number,
+  factorAngle: string | number
+): Point {
+  let mag = randomizeNumber(startMag, randomize, factorMag, 0);
+  let angle = randomizeNumber(startAngle, randomize, factorAngle, 0);
+  return polarToCart(mag, angle);
+}
+
+export function randomizeNumber(
+  startingValue: string | number,
+  randomize: boolean,
+  randomizeFactor: string | number,
+  def: number
+) {
+  if (randomize) {
+    return (
+      makeSafe(startingValue, def) +
+      (Math.random() * 2 - 1) * makeSafe(randomizeFactor, 0)
+    );
+  } else {
+    return makeSafe(startingValue, def);
+  }
+}
+
+export function deg2rad(angle: number) {
+  return (Math.PI / 180) * angle;
+}
+
+export function rad2deg(angle: number) {
+  return (180 / Math.PI) * angle;
+}
+
+export function makeSafe(n: string | number, def: number) {
+  if (typeof n == "number") {
+    return n;
+  } else {
+    let safeN = parseFloat(n);
+    if (!isFinite(safeN)) {
+      safeN = def;
+    }
+    return safeN;
   }
 }

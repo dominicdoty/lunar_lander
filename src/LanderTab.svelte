@@ -12,10 +12,10 @@
     resetLander,
     landerState,
     landerSuccessState,
-    cartToPolar,
     userLogs,
     userPlots,
   } from "./render";
+  import { cartToPolar } from "./utils";
   import { onMount } from "svelte";
   import { launchError, regenerateGround } from "./game";
   import {

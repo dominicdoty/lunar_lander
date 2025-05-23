@@ -1,6 +1,5 @@
-import { cartToPolar } from "./render";
 import { type Line, type Point } from "./types";
-import { Rotate, deg2rad, userLogs, userPlots } from "./render";
+import { Rotate, userLogs, userPlots } from "./render";
 import { gground, launchError } from "./game";
 import { aboveGround, findGroundPoint } from "./ground_utils";
 import {
@@ -8,6 +7,8 @@ import {
   sortArrayOfPairs,
   wrapAngle,
   validateUserReturn,
+  cartToPolar,
+  deg2rad,
 } from "./utils";
 
 export const crashVelocityLimit = 1;
