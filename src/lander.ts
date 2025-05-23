@@ -45,9 +45,7 @@ export class LanderPhysics {
   gravity: number;
   staticMass: number;
   rotationalThrustEfficiency: number; // thrust is mulitplied by this number and subtracted from fuel level
-  rotThrustEffectivity: number; // factor to convert thrust to force
   aftThrustEfficiency: number; // thrust is mulitplied by this number and subtracted from fuel level
-  aftThrustEffectivity: number; // factor to convert thrust to force
 
   // Internal State Initial Values
   linAccel: Point; // XY vector pix/sec^2
@@ -94,9 +92,7 @@ export class LanderPhysics {
     this.gravity = 1 / 60;
     this.staticMass = 10;
     this.rotationalThrustEfficiency = 0.02;
-    this.rotThrustEffectivity = 1;
     this.aftThrustEfficiency = 0.05;
-    this.aftThrustEffectivity = 1;
 
     // Internal State Initial Values
     this.linAccel = [0, 0];
@@ -154,9 +150,7 @@ export class LanderPhysics {
     // rotVel potential
     let eR = Math.abs(0.5 * this.mass * Math.pow(this.rotVel, 2));
 
-    let e =
-      (eH + eK) / this.aftThrustEffectivity +
-      (eR + eA) / this.rotThrustEffectivity;
+    let e = eH + eK + eR + eA;
 
     return e / this.fuelLevel;
   }
@@ -207,19 +201,13 @@ export class LanderPhysics {
 
     // Calculate vector components from current angle
     let xCompAccel =
-      (this.aftThrust *
-        this.aftThrustEffectivity *
-        Math.sin(deg2rad(this.angle))) /
-      this.mass;
+      (this.aftThrust * Math.sin(deg2rad(this.angle))) / this.mass;
     let yCompAccel =
-      (this.aftThrust *
-        this.aftThrustEffectivity *
-        Math.cos(deg2rad(this.angle))) /
-      this.mass;
+      (this.aftThrust * Math.cos(deg2rad(this.angle))) / this.mass;
 
     // Update accel
     this.linAccel = [xCompAccel, yCompAccel - this.gravity];
-    this.rotAccel = (this.rotThrust * this.rotThrustEffectivity) / this.mass; // mass isn't really accurate here as it should be rotational inertia
+    this.rotAccel = this.rotThrust / this.mass; // mass isn't really accurate here as it should be rotational inertia
 
     // Update speed
     this.linVel = [
