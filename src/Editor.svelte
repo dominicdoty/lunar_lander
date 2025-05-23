@@ -9,6 +9,8 @@
 
   import { js_beautify } from "js-beautify";
   import Hotkey from "./Hotkey.svelte";
+  import { validateUserReturn } from "./utils";
+  import { options } from "./settings";
 
   // Stop lander running when we go back to launch tab
   $runLander = false;
@@ -59,15 +61,11 @@
           plot: plotTest,
         });
 
-        if (!("rotThrust" in userReturn)) {
-          throw new Error("rotThrust missing from return object!");
-        }
-        if (!("aftThrust" in userReturn)) {
-          throw new Error("aftThrust missing from return object!");
-        }
-        if (!("userStore" in userReturn)) {
-          throw new Error("userStore missing from return object!");
-        }
+        validateUserReturn(
+          userReturn,
+          $options.allowableAftThrottle,
+          $options.allowableRotThrottle
+        );
       }
 
       traceBack = "";
@@ -75,9 +73,6 @@
       $userCodeFunction = f;
     } catch (error) {
       if (error instanceof Error) {
-        error = error as Error;
-        // Removed line/col numbers as they appear to be wrong now
-        // ${error.lineNumber}:${error.columnNumber}
         traceBack = `Error: ${error.message}`;
       } else {
         traceBack = `Unknown error ${error}`;

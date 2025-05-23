@@ -2,23 +2,16 @@ import { cartToPolar, type Line, type Point } from "./render";
 import { Rotate, deg2rad, userLogs, userPlots } from "./render";
 import { gground, launchError } from "./game";
 import { aboveGround, findGroundPoint } from "./ground_utils";
+import {
+  rateLimitedCall,
+  sortArrayOfPairs,
+  wrapAngle,
+  validateUserReturn,
+} from "./utils";
 
 export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
-
-let rateLimitedCall = (
-  acceptInterval: number,
-  call: (callNum: number, ...args: any) => void
-) => {
-  let callNum = 0;
-  return (...args: any) => {
-    if (callNum % acceptInterval == 0) {
-      call(callNum, ...args);
-    }
-    callNum++;
-  };
-};
 
 let log = rateLimitedCall(10, (callNum: number, ...data: any) => {
   userLogs.update((v) => {
@@ -34,84 +27,6 @@ let plot = rateLimitedCall(10, (callNum: number, data: {}) => {
     return v;
   });
 });
-
-function wrapAngle(angle: number): number {
-  angle = (angle + 180) % 360;
-  if (angle < 0) {
-    angle += 360;
-  }
-  angle -= 180;
-  return angle;
-}
-
-function sortArrayOfPairs(arr: Array<Array<number>>): Array<Array<number>> {
-  // Sort pairs first
-  let pairSortedArr = arr.map((pair) => {
-    let [a, b] = pair;
-    if (a > b) {
-      return [b, a];
-    } else {
-      return [a, b];
-    }
-  });
-
-  // Sort outer second
-  pairSortedArr.sort((a, b) => {
-    if (a[0] > b[0]) {
-      return 1;
-    } else {
-      return -1;
-    }
-  });
-
-  return pairSortedArr;
-}
-
-function getNearerOfTwo(value: number, low: number, high: number): number {
-  if (value - low < (high - low) / 2) {
-    value = low;
-  } else {
-    value = high;
-  }
-
-  return value;
-}
-
-function snapToLimits(
-  value: number,
-  name: string,
-  limits: Array<Array<number>>
-): number {
-  let lastExceeded = 0;
-
-  for (let i = 0; i < limits.length; i++) {
-    const [low, high] = limits[i];
-
-    // Fastpath checks
-    if (value >= low && value <= high) {
-      return value;
-    }
-
-    // Too big for this set, keep looking
-    if (value > high) {
-      lastExceeded = high;
-      continue;
-    }
-
-    // Too small for this set
-    if (value < low) {
-      // Find the closer of the last limit we exceeded and the current lower bound
-      value = getNearerOfTwo(value, lastExceeded, low);
-      launchError.set(`${name} clipped to ${value.toFixed(2)}`);
-      return value;
-    }
-  }
-
-  // Catch when we fall off the end without finding a limit
-  value = lastExceeded;
-  launchError.set(`${name} clipped to ${value.toFixed(2)}`);
-  return value;
-}
 
 export class LanderPhysics {
   // Set Values
@@ -257,15 +172,11 @@ export class LanderPhysics {
         plot: plot,
       });
 
-      if (!("rotThrust" in userReturn)) {
-        throw new Error("rotThrust missing from return object!");
-      }
-      if (!("aftThrust" in userReturn)) {
-        throw new Error("aftThrust missing from return object!");
-      }
-      if (!("userStore" in userReturn)) {
-        throw new Error("userStore missing from return object!");
-      }
+      validateUserReturn(
+        userReturn,
+        this.allowableAftThrottle,
+        this.allowableRotThrottle
+      );
 
       ({
         rotThrust: this.rotThrust,
@@ -276,30 +187,8 @@ export class LanderPhysics {
       launchError.set(error);
       this.rotThrust = 0;
       this.aftThrust = 0;
+      this.userStore = {};
     }
-
-    // Check for illegal thrust
-    if (!isFinite(this.aftThrust)) {
-      this.aftThrust = 0;
-      launchError.set("aftThrust not finite!");
-    }
-
-    if (!isFinite(this.rotThrust)) {
-      this.rotThrust = 0;
-      launchError.set("rotThrust not finite!");
-    }
-
-    // Snap to limits
-    this.aftThrust = snapToLimits(
-      this.aftThrust,
-      "aftThrust",
-      this.allowableAftThrottle
-    );
-    this.rotThrust = snapToLimits(
-      this.rotThrust,
-      "rotThrust",
-      this.allowableRotThrottle
-    );
 
     // Update Fuel Levels (track separate from mass since dynamic mass may not be enabled)
     this.fuelLevel -=
