@@ -1,4 +1,4 @@
-import { type Line, type Point } from "./types";
+import type { LanderStateTimeSeries, Line, Point } from "./types";
 import { Rotate, userLogs, userPlots } from "./render";
 import { gground, launchError } from "./game";
 import { aboveGround, findGroundPoint } from "./ground_utils";
@@ -15,6 +15,9 @@ import {
 export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
+
+// Rates were all developed based on 60FPS, so we scale to that
+const basePhysicsPeriod = 1 / 60;
 
 let log = rateLimitedCall(10, (callNum: number, ...data: any) => {
   userLogs.update((v) => {
@@ -157,8 +160,7 @@ export class LanderPhysics {
     return e / this.fuelLevel;
   }
 
-  update() {
-    // Run User Autopilot Command
+  stepAutopilot() {
     try {
       let userReturn = this.userAutoPilot({
         x_position: this.pos[0],
@@ -186,11 +188,17 @@ export class LanderPhysics {
       this.aftThrust = 0;
       this.userStore = {};
     }
+  }
+
+  stepPhysics(physicsPeriod: number): boolean {
+    const scale = physicsPeriod / basePhysicsPeriod;
 
     // Update Fuel Levels (track separate from mass since dynamic mass may not be enabled)
     this.fuelLevel -=
-      Math.abs(this.rotThrust) * this.rotationalThrustEfficiency +
-      this.aftThrust * this.aftThrustEfficiency;
+      scale *
+      (Math.abs(this.rotThrust) * this.rotationalThrustEfficiency +
+        this.aftThrust * this.aftThrustEfficiency);
+
     if (this.fuelLevel <= 0) {
       this.fuelLevel = 0;
     }
@@ -208,8 +216,8 @@ export class LanderPhysics {
       (this.aftThrust * Math.cos(deg2rad(this.angle))) / this.mass;
 
     // Update accel
-    this.linAccel = [xCompAccel, yCompAccel - this.gravity];
-    this.rotAccel = this.rotThrust / this.mass; // mass isn't really accurate here as it should be rotational inertia
+    this.linAccel = [scale * xCompAccel, scale * (yCompAccel - this.gravity)];
+    this.rotAccel = scale * (this.rotThrust / this.mass); // mass isn't really accurate here as it should be rotational inertia
 
     // Update speed
     this.linVel = addPoints(this.linVel, this.linAccel);
@@ -229,6 +237,26 @@ export class LanderPhysics {
       },
       true
     );
+
+    return this.isAboveGround;
+  }
+
+  storeState(state: LanderStateTimeSeries) {
+    // Store state
+    if (state) {
+      state.pos.push(this.pos);
+      state.angle.push(this.angle);
+      state.linVel.push(this.linVel);
+      state.rotVel.push(this.rotVel);
+      state.aftThrust.push(this.aftThrust);
+      state.rotThrust.push(this.rotThrust);
+      state.fuelLevel.push(this.fuelLevel);
+    }
+  }
+
+  update() {
+    this.stepAutopilot();
+    this.stepPhysics(basePhysicsPeriod);
   }
 
   getLanderSuccessState() {

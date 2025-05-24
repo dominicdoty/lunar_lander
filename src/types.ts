@@ -10,3 +10,13 @@ export type AutopilotArgs = {
   log: (...args: any) => void;
   plot: (...args: any) => void;
 };
+
+export type LanderStateTimeSeries = {
+  pos: Point[];
+  angle: number[];
+  linVel: Point[];
+  rotVel: number[];
+  aftThrust: number[];
+  rotThrust: number[];
+  fuelLevel: number[];
+};
