@@ -10,9 +10,9 @@ export const outerAppPadding = 10; // px
 export const innerAppPadding = 5; // px
 
 export const userCode = writable(initialCode);
-export const userCodeFunction = writable(() => {
-  return { rotThrust: 0, aftThrust: 0, userStore: {} };
-});
+export const userCodeFunction = writable(
+  Function("return { rotThrust: 0, aftThrust: 0, userStore: {} }")
+);
 export const userLogs = writable([]);
 export const userPlots = writable([]);
 export const startupModalDisplayed = writable(false);

@@ -1,4 +1,4 @@
-import type { Point } from "./types";
+import type { AutopilotArgs, Point } from "./types";
 
 export function getNearerOfTwo(
   value: number,
@@ -152,7 +152,7 @@ export function validateUserReturn(
   }
 }
 
-export function runNoConsole(f: (a0: any) => any, args: { any: any }) {
+export function runNoConsole(f: Function, args: AutopilotArgs) {
   let methods = { log: {}, debug: {}, warn: {}, info: {} };
 
   try {
@@ -160,7 +160,7 @@ export function runNoConsole(f: (a0: any) => any, args: { any: any }) {
     // This allows us to test the user code before the launch
     Object.keys(methods).forEach((method) => {
       methods[method] = window.console[method];
-      window.console[method] = function () {};
+      window.console[method] = (...args) => null;
     });
 
     return f(args);
