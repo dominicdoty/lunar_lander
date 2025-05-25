@@ -30,8 +30,8 @@ export class Options {
   defaults = {
     enableFuel: false,
     enableFuelMass: false,
-    startingAltitude: 500,
-    startingX: -1,
+    startingAltitude: 90,
+    startingX: 50,
     startingAngle: 0,
     startingAngleRandomize: false,
     startingAngleRandomizeAngle: 0,

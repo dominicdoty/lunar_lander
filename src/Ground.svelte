@@ -56,11 +56,6 @@
     generateInitialGround();
   }
 
-  // Set Starting X if needed
-  if ($options.startingX == -1) {
-    $options.startingX = ground.length / 2;
-  }
-
   // Generate More Ground when VW Changes
   VW.subscribe((vw) => {
     let lastGroundPoint = ground[ground.length - 1];

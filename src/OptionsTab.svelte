@@ -54,8 +54,8 @@
     Vertical: {
       enableFuel: false,
       enableFuelMass: false,
-      startingAltitude: 500,
-      startingX: -1,
+      startingAltitude: 90,
+      startingX: 50,
       startingAngle: 0,
       startingAngleRandomize: false,
       startingAngleRandomizeAngle: 0,
@@ -73,8 +73,8 @@
     Rotated: {
       enableFuel: false,
       enableFuelMass: false,
-      startingAltitude: 500,
-      startingX: -1,
+      startingAltitude: 90,
+      startingX: 50,
       startingAngle: 0,
       startingAngleRandomize: true,
       startingAngleRandomizeAngle: 10,
@@ -92,8 +92,8 @@
     Ballistic: {
       enableFuel: true,
       enableFuelMass: true,
-      startingAltitude: 500,
-      startingX: 20,
+      startingAltitude: 90,
+      startingX: 10,
       startingAngle: -90,
       startingAngleRandomize: true,
       startingAngleRandomizeAngle: 10,
@@ -111,8 +111,8 @@
     "Tumbling Ballistic": {
       enableFuel: true,
       enableFuelMass: true,
-      startingAltitude: 500,
-      startingX: 20,
+      startingAltitude: 90,
+      startingX: 10,
       startingAngle: -90,
       startingAngleRandomize: true,
       startingAngleRandomizeAngle: 180,
@@ -157,20 +157,20 @@
           choices={thrusterChoices}
         />
       </Setting>
-      <Setting description="Starting Altitude">
+      <Setting description="Starting Altitude [% h]">
         <SettingInput
           inputType="number"
           store={options}
           key="startingAltitude"
-          placeholder="Altitude"
+          placeholder="Altitude %"
         />
       </Setting>
-      <Setting description="Starting X Position">
+      <Setting description="Starting X Position [% w]">
         <SettingInput
           inputType="number"
           store={options}
           key="startingX"
-          placeholder="X Pos"
+          placeholder="X %"
         />
       </Setting>
       <Setting description="Starting Angle">

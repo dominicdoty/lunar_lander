@@ -1,4 +1,5 @@
 import type { Point, Line } from "./types";
+import { subtractPoints } from "./utils";
 
 export function reSeedGround() {
   return btoa(Math.random().toFixed(16));
@@ -107,6 +108,10 @@ export function findGroundPoint(ground: Line, p: Point): [Point, boolean] {
 
   return [ground[idx], saturated];
 }
+
+export function getAltitude(ground: Line, point: Point) {
+  let [gndPoint, _] = findGroundPoint(ground, point);
+  return subtractPoints(point, gndPoint)[1];
 }
 
 /**

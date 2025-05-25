@@ -1,4 +1,7 @@
-import type { AutopilotArgs, Point } from "./types";
+import { findGroundPoint } from "./ground_utils";
+import { Options } from "./settings";
+import type { CoordinateSpace } from "./render";
+import type { AutopilotArgs, Line, Point, Polar } from "./types";
 
 export function getNearerOfTwo(
   value: number,
@@ -174,42 +177,47 @@ export function runNoConsole(f: Function, args: AutopilotArgs) {
   }
 }
 
-export function polarToCart(mag: number, angle: number): Point {
+export function polarToCart([mag, angle]: Polar): Point {
   return [mag * Math.sin(deg2rad(angle)), mag * Math.cos(deg2rad(angle))];
 }
 
-export function cartToPolar(cart: Point): [mag: number, ang: number] {
-  let [x, y] = cart;
+export function cartToPolar([x, y]: Point): Polar {
   let mag = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
   let angle = -1 * (rad2deg(Math.atan2(y, x)) - 90);
   return [mag, angle];
 }
 
-export function randomizeVector(
-  startMag: string | number,
-  startAngle: string | number,
+export function randomizePoint(
   randomize: boolean,
-  factorMag: string | number,
-  factorAngle: string | number
+  initial: Point,
+  randomFactor: Point
 ): Point {
-  let mag = randomizeNumber(startMag, randomize, factorMag, 0);
-  let angle = randomizeNumber(startAngle, randomize, factorAngle, 0);
-  return polarToCart(mag, angle);
+  return [
+    randomizeNumber(randomize, initial[0], randomFactor[0]),
+    randomizeNumber(randomize, initial[1], randomFactor[1]),
+  ];
+}
+
+export function randomizeVector(
+  randomize: boolean,
+  initial: Polar,
+  randomFactor: Polar
+): Point {
+  return polarToCart([
+    randomizeNumber(randomize, initial[0], randomFactor[0]),
+    randomizeNumber(randomize, initial[1], randomFactor[1]),
+  ]);
 }
 
 export function randomizeNumber(
-  startingValue: string | number,
   randomize: boolean,
-  randomizeFactor: string | number,
-  def: number
+  startingValue: number,
+  randomizeFactor: number
 ) {
   if (randomize) {
-    return (
-      makeSafe(startingValue, def) +
-      (Math.random() * 2 - 1) * makeSafe(randomizeFactor, 0)
-    );
+    return startingValue + (Math.random() * 2 - 1) * randomizeFactor;
   } else {
-    return makeSafe(startingValue, def);
+    return startingValue;
   }
 }
 
@@ -238,4 +246,85 @@ export function addPoints(...points: Point[]): Point {
     (prev: Point, cur: Point) => [prev[0] + cur[0], prev[1] + cur[1]],
     [0, 0]
   );
+}
+
+export function subtractPoints(...points: Point[]): Point {
+  return points
+    .slice(1)
+    .reduce(
+      (prev: Point, cur: Point) => [prev[0] - cur[0], prev[1] - cur[1]],
+      points[0]
+    );
+}
+
+export function makeTimer(timeout: number) {
+  let endTime = performance.now() + timeout;
+  return () => performance.now() > endTime;
+}
+
+export function initialFromOptions(
+  options: Options,
+  ground: Line,
+  fuelCapacity: number,
+  vw: CoordinateSpace
+) {
+  let initial = {
+    pos: [0, 0] as Point,
+    linVel: [0, 0] as Point,
+    angle: 0,
+    rotVel: 0,
+    aftThrust: 0,
+    rotThrust: 0,
+    fuelLevel: 0,
+  };
+
+  let groundHeight = findGroundPoint(ground, [options.startingX, 0])[0][1];
+  let availHeight = vw.height - groundHeight;
+
+  initial.pos = [
+    (options.startingX / 100) * vw.width,
+    (options.startingAltitude / 100) * availHeight + groundHeight,
+  ];
+
+  initial.linVel = polarToCart([
+    options.velocityVectorMagnitude,
+    options.velocityVectorAngle,
+  ]);
+
+  initial.angle = options.startingAngle;
+  initial.rotVel = options.rotationalVelocity;
+  initial.aftThrust = 0;
+  initial.rotThrust = 0;
+  initial.fuelLevel = fuelCapacity;
+
+  return initial;
+}
+
+export function randomizeInitialFromOptions(options: Options): {
+  posFactor: Point;
+  linVelFactor: Polar;
+  angleFactor: number;
+  rotVelFactor: number;
+} {
+  let factors = {
+    posFactor: [0, 0] as Point,
+    linVelFactor: [0, 0] as Polar,
+    angleFactor: 0,
+    rotVelFactor: 0,
+  };
+
+  if (options.velocityVectorRandomize) {
+    factors.linVelFactor = [
+      options.velocityVectorMagnitude,
+      options.velocityVectorAngle,
+    ] as Polar;
+  }
+  if (options.startingAngleRandomize) {
+    factors.angleFactor = options.startingAngleRandomizeAngle;
+  }
+  if (options.rotationalVelocityRandomize) {
+    factors.rotVelFactor = options.rotationalVelocityRandomizeMagnitude;
+  }
+
+  return factors;
 }

@@ -1,9 +1,7 @@
 import { derived, writable } from "svelte/store";
-import type { Writable } from "svelte/store";
-import type { LanderPhysics } from "./lander";
-import type { Point, Line } from "./types";
+import type { Point, Line, LanderState } from "./types";
 import { aboveGround } from "./ground_utils";
-import { polarToCart, cartToPolar, deg2rad } from "./utils";
+import { polarToCart, cartToPolar, deg2rad, makeTimer } from "./utils";
 import initialCode from "./default_editor_contents.js?raw";
 
 export const outerAppPadding = 10; // px
@@ -19,7 +17,17 @@ export const startupModalDisplayed = writable(false);
 export const runLander = writable(false);
 export const resetLander = writable(false);
 export const landerSuccessState = writable("");
-export const landerState: Writable<LanderPhysics> = writable();
+export const difficulty = writable(0);
+export const fuelLevel = writable(0);
+export const landerFinalState = writable({
+  pos: [0, 0],
+  linVel: [0, 0],
+  angle: 0,
+  rotVel: 0,
+  aftThrust: 0,
+  rotThrust: 0,
+  fuelLevel: 0,
+} as LanderState);
 
 /** Coordinate system view
  * used to represent internal game coordinate space, and render view space
@@ -208,14 +216,18 @@ export class ExplosionParticle {
 }
 
 export class Explosion {
+  timerExpired: () => boolean;
   particles: ExplosionParticle[];
 
   constructor(
+    durationMs: number,
     startingPos: Point,
     startingVel: Point,
     scale: number,
     ground: Line
   ) {
+    this.timerExpired = makeTimer(durationMs);
+
     // Reflect startingVel in the Y direction
     startingVel = [startingVel[0], Math.abs(startingVel[1])];
 
@@ -235,22 +247,246 @@ export class Explosion {
 
       return new ExplosionParticle(
         startingPos,
-        polarToCart(
+        polarToCart([
           (mag * 2 * randFactor * Math.random()) / 2,
-          angle + 180 * (randFactor * 2 - 1)
-        ) as Point,
+          angle + 180 * (randFactor * 2 - 1),
+        ]) as Point,
         0.5,
         ground
       );
     });
   }
 
-  render(context: CanvasRenderingContext2D) {
-    context.strokeStyle = "white";
-    this.particles.forEach((ep) => {
-      context.beginPath();
-      ep.render(context);
-      context.stroke();
-    });
+  render(context: CanvasRenderingContext2D): boolean {
+    if (this.timerExpired()) {
+      return true;
+    } else {
+      context.strokeStyle = "white";
+      this.particles.forEach((ep) => {
+        context.beginPath();
+        ep.render(context);
+        context.stroke();
+      });
+
+      return false;
+    }
   }
+}
+
+export function drawRotatedImage(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  pos: Point,
+  angle: number,
+  hscale: number = 1,
+  wscale: number = 1
+) {
+  let width = image.width * wscale;
+  let height = image.height * hscale;
+  context.save();
+  context.translate(1 * pos[0], 1 * pos[1]);
+  context.rotate(deg2rad(angle));
+  context.translate(-1 * pos[0], -1 * pos[1]);
+  context.drawImage(
+    image,
+    pos[0] - width / 2,
+    pos[1] - height / 2,
+    width,
+    height
+  );
+  context.restore();
+}
+
+export function scaledThrustDraw(
+  context: CanvasRenderingContext2D,
+  thrustImage: HTMLImageElement,
+  pos: Point,
+  offset: Point,
+  angle: number,
+  thrust: number,
+  scale: number,
+  randomness: number
+) {
+  let width = thrustImage.width;
+  let height =
+    thrustImage.height *
+    Math.abs(thrust) *
+    (scale + randomness * Math.random());
+  context.save();
+  context.translate(1 * pos[0], 1 * pos[1]);
+  context.rotate(deg2rad(angle));
+  context.translate(-1 * pos[0], -1 * pos[1]);
+  context.drawImage(
+    thrustImage,
+    pos[0] + offset[0],
+    pos[1] + offset[1],
+    width,
+    height
+  );
+  context.restore();
+}
+
+export function drawVector(
+  context: CanvasRenderingContext2D,
+  pos: Point,
+  angle: number,
+  length: number
+) {
+  let headlen = 5;
+  let tox = length;
+  let toy = 0;
+
+  if (length == 0) {
+    return;
+  }
+
+  let points: Line = [
+    [0, 0],
+    [tox, toy],
+    [
+      tox - headlen * Math.cos(-Math.PI / 6),
+      toy - headlen * Math.sin(-Math.PI / 6),
+    ],
+    [tox, toy],
+    [
+      tox - headlen * Math.cos(Math.PI / 6),
+      toy - headlen * Math.sin(Math.PI / 6),
+    ],
+  ];
+
+  points = Rotate(points, angle);
+  points = Translate(points, pos);
+
+  context.save();
+  context.strokeStyle = "grey";
+  context.lineWidth = 1;
+  canvasRenderLine(context, points);
+  context.restore();
+}
+
+export function drawCircleVector(
+  context: CanvasRenderingContext2D,
+  pos: Point,
+  diameter: number,
+  angle: number
+) {
+  angle *= -1;
+  let headlen = 5;
+
+  if (angle > 360) {
+    angle = 360;
+  }
+
+  if (angle < -360) {
+    angle = -360;
+  }
+
+  if (angle == 0) {
+    return;
+  }
+
+  let headPoints: Line = [
+    [-headlen * Math.cos(-Math.PI / 6), -headlen * Math.sin(-Math.PI / 6)],
+    [0, 0],
+    [-headlen * Math.cos(Math.PI / 6), -headlen * Math.sin(Math.PI / 6)],
+  ];
+
+  headPoints = Rotate(headPoints, angle > 0 ? 0 : 180);
+  headPoints = Translate(headPoints, [diameter / 2, 0]);
+  headPoints = Rotate(headPoints, -angle);
+  headPoints = Translate(headPoints, pos);
+
+  context.strokeStyle = "grey";
+  context.lineWidth = 1;
+  canvasRenderLine(context, headPoints);
+
+  context.beginPath();
+  context.arc(
+    pos[0],
+    pos[1],
+    diameter / 2,
+    deg2rad(90),
+    deg2rad(90 + angle),
+    angle < 0
+  );
+  context.stroke();
+}
+
+export function drawLander(
+  context: CanvasRenderingContext2D,
+  state: LanderState,
+  thrustImage: HTMLImageElement,
+  landerImage: HTMLImageElement
+) {
+  // Velocity Vector
+  let [velMagnitude, velAng] = cartToPolar(state.linVel);
+  drawVector(context, state.pos, velAng, velMagnitude * 15);
+
+  // Rotation Vector
+  drawCircleVector(context, state.pos, 50, state.rotVel * 30);
+
+  // Thrusters
+  if (state.aftThrust > 0) {
+    scaledThrustDraw(
+      context,
+      thrustImage,
+      state.pos,
+      [
+        -thrustImage.width / 2,
+        +landerImage.height / 4 - thrustImage.height / 8,
+      ],
+      -1 * (state.angle + 180),
+      state.aftThrust,
+      3,
+      1
+    );
+  }
+
+  // Draw Rotational Thrusters
+  if (state.rotThrust > 0) {
+    scaledThrustDraw(
+      context,
+      thrustImage,
+      state.pos,
+      [landerImage.height / 6, landerImage.width / 5],
+      -1 * (state.angle + 90),
+      state.rotThrust,
+      1,
+      1
+    );
+    scaledThrustDraw(
+      context,
+      thrustImage,
+      state.pos,
+      [landerImage.height / 6, landerImage.width / 5],
+      -1 * (state.angle - 90),
+      state.rotThrust,
+      1,
+      1
+    );
+  } else if (state.rotThrust < 0) {
+    scaledThrustDraw(
+      context,
+      thrustImage,
+      state.pos,
+      [-landerImage.height / 6, landerImage.width / 5],
+      -1 * (state.angle + 90),
+      state.rotThrust,
+      1,
+      1
+    );
+    scaledThrustDraw(
+      context,
+      thrustImage,
+      state.pos,
+      [-landerImage.height / 6, landerImage.width / 5],
+      -1 * (state.angle - 90),
+      state.rotThrust,
+      1,
+      1
+    );
+  }
+
+  // Draw Lander
+  drawRotatedImage(context, landerImage, state.pos, -1 * state.angle);
 }

@@ -51,7 +51,6 @@
       {placeholder}
       title={placeholder}
       bind:this={domObj}
-      bind:value={$store[key]}
       on:input={() => {
         onInputCallback();
         domObj.classList.remove("is-danger");
@@ -77,7 +76,6 @@
       {placeholder}
       title={placeholder}
       bind:this={domObj}
-      bind:value={$store[key]}
       on:input={() => {
         onInputCallback();
         store.update((opts) => {

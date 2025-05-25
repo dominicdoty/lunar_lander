@@ -1,7 +1,12 @@
-import type { LanderStateTimeSeries, Line, Point } from "./types";
-import { Rotate, userLogs, userPlots } from "./render";
-import { gground, launchError } from "./game";
-import { aboveGround, findGroundPoint } from "./ground_utils";
+import type {
+  LanderState,
+  LanderStateTimeSeries,
+  Line,
+  Point,
+  Polar,
+} from "./types";
+import { drawLander, Explosion, Rotate, userLogs, userPlots } from "./render";
+import { aboveGround, getAltitude } from "./ground_utils";
 import {
   rateLimitedCall,
   sortArrayOfPairs,
@@ -10,11 +15,29 @@ import {
   cartToPolar,
   deg2rad,
   addPoints,
+  randomizeVector,
+  randomizePoint,
+  randomizeNumber,
+  makeTimer,
 } from "./utils";
 
 export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
+export const fuelCapacity = 10;
+
+enum LanderRenderState {
+  "IDLE",
+  "FLYING",
+  "EXPLODING",
+  "GLOATING", // short wait state for gloating before popup
+  "SHOWINFO",
+}
+
+const gravity = 1 / 60;
+const staticMass = 10;
+const rotationalThrustEfficiency = 0.02;
+const aftThrustEfficiency = 0.05;
 
 // Rates were all developed based on 60FPS, so we scale to that
 const basePhysicsPeriod = 1 / 60;
@@ -35,87 +58,102 @@ let plot = rateLimitedCall(10, (callNum: number, data: {}) => {
 });
 
 export class LanderPhysics {
-  // Set Values
-  pos: Point; // pixels
-  linVel: Point; // XY vector pix/sec
-  angle: number; // degrees
-  rotVel: number; // deg/sec
+  stateHist: LanderStateTimeSeries;
   userAutoPilot: Function;
   enableFuel: boolean; // enforce running out of fuel
   enableFuelMass: boolean; // account for mass of fuel (requires enableFuel)
   allowableAftThrottle: Array<Array<number>>; // array of tuples representing allowable throttle ranges
   allowableRotThrottle: Array<Array<number>>;
 
-  // Static Values
-  gravity: number;
-  staticMass: number;
-  rotationalThrustEfficiency: number; // thrust is mulitplied by this number and subtracted from fuel level
-  aftThrustEfficiency: number; // thrust is mulitplied by this number and subtracted from fuel level
-
   // Internal State Initial Values
-  linAccel: Point; // XY vector pix/sec^2
-  rotAccel: number; // deg/sec^2
-  initialFuelLevel: number;
-  fuelLevel: number;
-  aftThrust: number; // last user autopilot numbers
-  rotThrust: number; // last user autopilot numbers
   userStore: object; // storage of user data from call to call
   isAboveGround: boolean; // are we still operating?
+  crashed: boolean; // does this end in tears?
+  error: Error; // Store errors encountered while running
   ground: Line; // ground points local storage
+
+  // Rendering State
+  renderState: LanderRenderState;
+  renderFrameIdx: number;
+  explosion: Explosion;
+  gloatTimerExpired: () => boolean;
 
   get ["mass"]() {
     if (this.enableFuelMass) {
-      return this.staticMass + this.fuelLevel;
+      return staticMass + this.stateHist.at(-1).fuelLevel;
     } else {
-      return this.staticMass + this.initialFuelLevel;
+      return staticMass + fuelCapacity;
     }
   }
 
   constructor(
-    starting_pos: Point,
-    linVel: Point,
-    angle: number,
-    rotVel: number,
+    initialState: LanderState,
     userAutoPilot: Function,
     enableFuel: boolean,
     enableFuelMass: boolean,
     allowableAftThrottle: Array<Array<number>>,
-    allowableRotThrottle: Array<Array<number>>
+    allowableRotThrottle: Array<Array<number>>,
+    ground: Line,
+    randomize?: {
+      posFactor: Point;
+      linVelFactor: Polar;
+      angleFactor: number;
+      rotVelFactor: number;
+    }
   ) {
-    // Set Values
-    this.pos = starting_pos;
-    this.linVel = linVel;
-    this.angle = wrapAngle(angle);
-    this.rotVel = rotVel;
+    // Autopilot
     this.userAutoPilot = userAutoPilot;
+
+    // Settings
     this.enableFuel = enableFuel;
     this.enableFuelMass = enableFuelMass;
     this.allowableAftThrottle = sortArrayOfPairs(allowableAftThrottle);
     this.allowableRotThrottle = sortArrayOfPairs(allowableRotThrottle);
 
-    // Static Values
-    this.gravity = 1 / 60;
-    this.staticMass = 10;
-    this.rotationalThrustEfficiency = 0.02;
-    this.aftThrustEfficiency = 0.05;
-
     // Internal State Initial Values
-    this.linAccel = [0, 0];
-    this.rotAccel = 0;
-    this.initialFuelLevel = 10;
-    this.fuelLevel = 10;
-    this.aftThrust = 0;
-    this.rotThrust = 0;
+    initialState.fuelLevel = fuelCapacity;
+    initialState.angle = wrapAngle(initialState.angle);
     this.userStore = {};
+    this.ground = ground;
     this.isAboveGround = true;
-    gground.subscribe((v) => {
-      this.ground = v;
-    });
+    this.crashed = false;
+
+    // Randomize initial State
+    if (randomize) {
+      initialState.pos = randomizePoint(
+        true,
+        initialState.pos,
+        randomize.posFactor
+      );
+      initialState.linVel = randomizeVector(
+        true,
+        cartToPolar(initialState.linVel),
+        randomize.linVelFactor
+      );
+      initialState.angle = randomizeNumber(
+        true,
+        initialState.angle,
+        randomize.angleFactor
+      );
+      initialState.rotVel = randomizeNumber(
+        true,
+        initialState.rotVel,
+        randomize.rotVelFactor
+      );
+    }
+
+    // Render State
+    this.renderState = LanderRenderState.IDLE;
+    this.renderFrameIdx = 0;
+    this.explosion = null;
+    this.gloatTimerExpired = null;
+
+    this.stateHist = [Object.assign({}, initialState)];
   }
 
-  getAltitude(): number {
-    let [gp, _] = findGroundPoint(this.ground, this.pos);
-    return this.pos[1] - gp[1];
+  getInterpolatedState(frameRate: number, idx: number): LanderState {
+    // TODO: Interpolate here between the physics rate and frame rate
+    return this.stateHist[idx];
   }
 
   getBbox() {
@@ -126,10 +164,12 @@ export class LanderPhysics {
       [-28 / 2, -25 / 2],
     ];
 
-    corners = Rotate(corners, this.angle);
+    let curState = this.stateHist.at(-1);
+
+    corners = Rotate(corners, curState.angle);
     corners.forEach((_, i, a) => {
-      a[i][0] += this.pos[0];
-      a[i][1] += this.pos[1];
+      a[i][0] += curState.pos[0];
+      a[i][1] += curState.pos[1];
     });
 
     return corners;
@@ -142,30 +182,83 @@ export class LanderPhysics {
     // TODO: Angle seems to weigh too heavily in this
     // Angle 0:17, 45:107, 90:197, 135:287, 180:377, 270: 557
 
+    let initialState = this.stateHist.at(0);
+
     // height potential
-    let eH = this.mass * this.gravity * this.getAltitude();
+    let eH = this.mass * gravity * getAltitude(this.ground, initialState.pos);
 
     // angle potential
-    let eA = 0.01 * Math.abs(this.mass * this.angle);
+    let eA = 0.01 * Math.abs(this.mass * initialState.angle);
 
     // linVel potential
-    let [Vmag, _] = cartToPolar(this.linVel);
+    let [Vmag, _] = cartToPolar(initialState.linVel);
     let eK = 0.5 * this.mass * Math.pow(Vmag, 2);
 
     // rotVel potential
-    let eR = Math.abs(0.5 * this.mass * Math.pow(this.rotVel, 2));
+    let eR = Math.abs(0.5 * this.mass * Math.pow(initialState.rotVel, 2));
 
     let e = eH + eK + eR + eA;
 
-    return e / this.fuelLevel;
+    return e / fuelCapacity;
   }
 
-  stepAutopilot() {
+  run(PhysicsHz: number, controlHz: number) {
+    if (PhysicsHz < controlHz) {
+      throw new Error("Physics rate must be higher than control rate");
+    }
+
+    let physicsPeriod = 1 / PhysicsHz;
+    let controlPeriod = 1 / controlHz;
+    let controlPeriodRenders = physicsPeriod / controlPeriod;
+
+    let renderCounter = 0;
+    let isAboveGround = true;
+    while (isAboveGround) {
+      let state = Object.assign({}, this.stateHist.at(-1));
+
+      // Run autopilot every nth update
+      if (renderCounter % controlPeriodRenders == 0) {
+        let start = performance.now();
+        state = this.stepAutopilot(state);
+        let duration = performance.now() - start;
+
+        if (duration > (1 / controlHz) * 1000) {
+          console.warn("Control loop time exceeded");
+          // TODO: Do something with this
+        }
+      }
+
+      renderCounter += 1;
+
+      [state, isAboveGround] = this.stepPhysics(physicsPeriod, state);
+
+      // Store final state
+      this.stateHist.push(state);
+    }
+
+    // Did we crash or land?
+    let finalState = this.stateHist.at(-1);
+    let [vel, _] = cartToPolar(finalState.linVel);
+
+    if (
+      vel > crashVelocityLimit ||
+      finalState.rotVel > crashRotVelLimit ||
+      finalState.rotVel < -crashRotVelLimit ||
+      finalState.angle > crashAngleLimit ||
+      finalState.angle < -crashAngleLimit
+    ) {
+      this.crashed = true;
+    } else {
+      this.crashed = false;
+    }
+  }
+
+  stepAutopilot(state: LanderState): LanderState {
     try {
       let userReturn = this.userAutoPilot({
-        x_position: this.pos[0],
-        altitude: this.getAltitude(),
-        angle: this.angle,
+        x_position: state.pos[0],
+        altitude: getAltitude(this.ground, state.pos),
+        angle: state.angle,
         userStore: this.userStore,
         log: log,
         plot: plot,
@@ -178,57 +271,62 @@ export class LanderPhysics {
       );
 
       ({
-        rotThrust: this.rotThrust,
-        aftThrust: this.aftThrust,
+        rotThrust: state.rotThrust,
+        aftThrust: state.aftThrust,
         userStore: this.userStore,
       } = userReturn);
     } catch (error) {
-      launchError.set(error);
-      this.rotThrust = 0;
-      this.aftThrust = 0;
+      this.error = error;
       this.userStore = {};
+      state.rotThrust = 0;
+      state.aftThrust = 0;
     }
+
+    return state;
   }
 
-  stepPhysics(physicsPeriod: number): boolean {
+  stepPhysics(
+    physicsPeriod: number,
+    state: LanderState
+  ): [LanderState, boolean] {
     const scale = physicsPeriod / basePhysicsPeriod;
 
     // Update Fuel Levels (track separate from mass since dynamic mass may not be enabled)
-    this.fuelLevel -=
+    state.fuelLevel -=
       scale *
-      (Math.abs(this.rotThrust) * this.rotationalThrustEfficiency +
-        this.aftThrust * this.aftThrustEfficiency);
+      (Math.abs(state.rotThrust) * rotationalThrustEfficiency +
+        state.aftThrust * aftThrustEfficiency);
 
-    if (this.fuelLevel <= 0) {
-      this.fuelLevel = 0;
+    if (state.fuelLevel <= 0) {
+      state.fuelLevel = 0;
     }
 
     // Kill thrust if out of fuel
-    if (this.enableFuel && this.fuelLevel == 0) {
-      this.aftThrust = 0;
-      this.rotThrust = 0;
+    if (this.enableFuel && state.fuelLevel == 0) {
+      state.aftThrust = 0;
+      state.rotThrust = 0;
     }
 
     // Calculate vector components from current angle
     let xCompAccel =
-      (this.aftThrust * Math.sin(deg2rad(this.angle))) / this.mass;
+      (state.aftThrust * Math.sin(deg2rad(state.angle))) / this.mass;
     let yCompAccel =
-      (this.aftThrust * Math.cos(deg2rad(this.angle))) / this.mass;
+      (state.aftThrust * Math.cos(deg2rad(state.angle))) / this.mass;
 
     // Update accel
-    this.linAccel = [scale * xCompAccel, scale * (yCompAccel - this.gravity)];
-    this.rotAccel = scale * (this.rotThrust / this.mass); // mass isn't really accurate here as it should be rotational inertia
+    let linAccel: Point = [scale * xCompAccel, scale * (yCompAccel - gravity)];
+    let rotAccel: number = scale * (state.rotThrust / this.mass); // mass isn't really accurate here as it should be rotational inertia
 
     // Update speed
-    this.linVel = addPoints(this.linVel, this.linAccel);
-    this.rotVel = this.rotVel + this.rotAccel;
+    state.linVel = addPoints(state.linVel, linAccel);
+    state.rotVel = state.rotVel + rotAccel;
 
     // Update position
-    this.pos = addPoints(this.pos, this.linVel);
-    this.angle = this.angle + this.rotVel;
+    state.pos = addPoints(state.pos, state.linVel);
+    state.angle = state.angle + state.rotVel;
 
     // Wrap angle to keep it -180 - +180
-    this.angle = wrapAngle(this.angle);
+    state.angle = wrapAngle(state.angle);
 
     // Find position of each corner of the lander bounding box
     this.isAboveGround = this.getBbox().reduce(
@@ -238,44 +336,79 @@ export class LanderPhysics {
       true
     );
 
-    return this.isAboveGround;
+    return [state, this.isAboveGround];
   }
 
-  storeState(state: LanderStateTimeSeries) {
-    // Store state
-    if (state) {
-      state.pos.push(this.pos);
-      state.angle.push(this.angle);
-      state.linVel.push(this.linVel);
-      state.rotVel.push(this.rotVel);
-      state.aftThrust.push(this.aftThrust);
-      state.rotThrust.push(this.rotThrust);
-      state.fuelLevel.push(this.fuelLevel);
-    }
-  }
+  render(
+    context: CanvasRenderingContext2D,
+    launch: boolean,
+    thrustImage: HTMLImageElement,
+    landerImage: HTMLImageElement,
+    fuelCallback: (fuel: number) => void
+  ): boolean {
+    switch (this.renderState) {
+      case LanderRenderState.IDLE: {
+        let state = this.getInterpolatedState(60, 0);
+        drawLander(context, state, thrustImage, landerImage);
 
-  update() {
-    this.stepAutopilot();
-    this.stepPhysics(basePhysicsPeriod);
-  }
-
-  getLanderSuccessState() {
-    if (this.isAboveGround) {
-      return "flying";
-    } else {
-      let [vel, _] = cartToPolar(this.linVel);
-
-      if (
-        vel > crashVelocityLimit ||
-        this.rotVel > crashRotVelLimit ||
-        this.rotVel < -crashRotVelLimit ||
-        this.angle > crashAngleLimit ||
-        this.angle < -crashAngleLimit
-      ) {
-        return "crashed";
-      } else {
-        return "landed";
+        if (launch) {
+          this.renderState = LanderRenderState.FLYING;
+        }
+        break;
       }
+
+      case LanderRenderState.FLYING: {
+        let state = this.getInterpolatedState(60, this.renderFrameIdx);
+        drawLander(context, state, thrustImage, landerImage);
+        fuelCallback(state.fuelLevel);
+
+        this.renderFrameIdx += 1;
+        if (this.renderFrameIdx == this.stateHist.length) {
+          if (this.crashed) {
+            this.explosion = new Explosion(
+              4000,
+              state.pos,
+              state.linVel,
+              state.fuelLevel,
+              this.ground
+            );
+            this.renderState = LanderRenderState.EXPLODING;
+          } else {
+            this.gloatTimerExpired = makeTimer(1000);
+            this.renderState = LanderRenderState.GLOATING;
+          }
+        }
+        break;
+      }
+
+      case LanderRenderState.EXPLODING: {
+        let explosionDone = this.explosion.render(context);
+        if (explosionDone) {
+          this.renderState = LanderRenderState.SHOWINFO;
+        }
+        break;
+      }
+
+      case LanderRenderState.GLOATING: {
+        let state = this.stateHist.at(-1);
+        state.aftThrust = 0;
+        state.rotThrust = 0;
+        drawLander(context, state, thrustImage, landerImage);
+        if (this.gloatTimerExpired()) {
+          this.gloatTimerExpired = null;
+          this.renderState = LanderRenderState.SHOWINFO;
+        }
+        break;
+      }
+
+      case LanderRenderState.SHOWINFO: {
+        return true;
+      }
+
+      default:
+        break;
     }
+
+    return false;
   }
 }

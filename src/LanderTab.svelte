@@ -10,10 +10,12 @@
     startupModalDisplayed,
     runLander,
     resetLander,
-    landerState,
     landerSuccessState,
     userLogs,
     userPlots,
+    landerFinalState,
+    difficulty,
+    fuelLevel,
   } from "./render";
   import { cartToPolar } from "./utils";
   import { onMount } from "svelte";
@@ -45,12 +47,11 @@
   });
 
   let localFuelLevel = 100;
-  let initialDifficulty = 0;
 
   onMount(() => {
     $launchError = "";
-    landerState.subscribe((landerState) => {
-      localFuelLevel = landerState.fuelLevel * 10;
+    fuelLevel.subscribe((fuel) => {
+      localFuelLevel = fuel * 10;
     });
   });
 
@@ -66,28 +67,29 @@
     modalState = "is-active";
 
     // Calculate velocity magnitude for report
-    let [vel, _] = cartToPolar($landerState.linVel);
+    let endState = $landerFinalState;
+    let endDifficulty = $difficulty;
+    let [vel, _] = cartToPolar(endState.linVel);
 
     // Score Calculation
     if (state == "landed") {
       // Score components are scaled to 0-1 through the allowable landing values
       // Components are summed and multiplied by the difficulty of the initial conditions
       let linVelScore = 1 - vel / crashVelocityLimit;
-      let rotVelScore = 1 - Math.abs($landerState.rotVel) / crashRotVelLimit;
-      let angleScore = 1 - Math.abs($landerState.angle) / crashAngleLimit;
-      let fuelScore = $landerState.fuelLevel / $landerState.initialFuelLevel;
+      let rotVelScore = 1 - Math.abs(endState.rotVel) / crashRotVelLimit;
+      let angleScore = 1 - Math.abs(endState.angle) / crashAngleLimit;
+      let fuelScore = endState.fuelLevel;
       let score =
-        initialDifficulty *
-        (linVelScore + rotVelScore + angleScore + fuelScore);
+        endDifficulty * (linVelScore + rotVelScore + angleScore + fuelScore);
       modalSubTitle = "Score: " + score.toFixed(0);
     }
 
     modalMessage = [
-      "Difficulty: " + initialDifficulty.toFixed(0),
-      "Angle: " + $landerState.angle.toFixed(0) + "°",
+      "Difficulty: " + endDifficulty.toFixed(0),
+      "Angle: " + endState.angle.toFixed(0) + "°",
       "Velocity: " + vel.toFixed(2),
-      "Rotation: " + $landerState.rotVel.toFixed(2),
-      "Fuel remaining: " + ($landerState.fuelLevel * 10).toFixed(0),
+      "Rotation: " + endState.rotVel.toFixed(2),
+      "Fuel remaining: " + (endState.fuelLevel * 10).toFixed(0),
     ];
   });
 
@@ -139,7 +141,7 @@
           Fuel: {localFuelLevel.toFixed(0)}
         </div>
         <div class="column is-float-right">
-          Difficulty: {initialDifficulty.toFixed(0)}
+          Difficulty: {$difficulty.toFixed(0)}
         </div>
       </div>
     </span>
@@ -151,7 +153,6 @@
           $runLander = true;
           $userLogs = [];
           $userPlots = [];
-          initialDifficulty = $landerState.getDifficulty();
         }}
       />
     </span>
