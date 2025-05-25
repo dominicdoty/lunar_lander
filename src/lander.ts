@@ -356,6 +356,7 @@ export class LanderPhysics {
     switch (this.renderState) {
       case LanderRenderState.IDLE: {
         let state = this.getInterpolatedState(60, 0);
+        fuelCallback(state.fuelLevel);
         drawLander(context, state, thrustImage, landerImage);
 
         if (launch) {
@@ -366,8 +367,8 @@ export class LanderPhysics {
 
       case LanderRenderState.FLYING: {
         let state = this.getInterpolatedState(60, this.renderFrameIdx);
-        drawLander(context, state, thrustImage, landerImage);
         fuelCallback(state.fuelLevel);
+        drawLander(context, state, thrustImage, landerImage);
 
         this.renderFrameIdx += 1;
         if (this.renderFrameIdx == this.stateHist.length) {
@@ -389,6 +390,8 @@ export class LanderPhysics {
       }
 
       case LanderRenderState.EXPLODING: {
+        let state = this.stateHist.at(-1);
+        fuelCallback(state.fuelLevel);
         let explosionDone = this.explosion.render(context);
         if (explosionDone) {
           this.renderState = LanderRenderState.SHOWINFO;
@@ -398,6 +401,7 @@ export class LanderPhysics {
 
       case LanderRenderState.GLOATING: {
         let state = this.stateHist.at(-1);
+        fuelCallback(state.fuelLevel);
         state.aftThrust = 0;
         state.rotThrust = 0;
         drawLander(context, state, thrustImage, landerImage);
@@ -409,6 +413,8 @@ export class LanderPhysics {
       }
 
       case LanderRenderState.SHOWINFO: {
+        let state = this.stateHist.at(-1);
+        fuelCallback(state.fuelLevel);
         return true;
       }
 

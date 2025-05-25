@@ -22,6 +22,7 @@
   import { launchError, regenerateGround } from "./game";
   import Console from "./Console.svelte";
   import IncDecButton from "./IncDecButton.svelte";
+  import { fuelCapacity } from "./lander";
 
   let modalState = "";
   if (!$startupModalDisplayed) {
@@ -42,13 +43,11 @@
     traceBack = error;
   });
 
-  let localFuelLevel = 100;
-
-  onMount(() => {
-    $launchError = "";
-    fuelLevel.subscribe((fuel) => {
+  let localFuelLevel = fuelCapacity * 10;
+  fuelLevel.subscribe((fuel) => {
+    if (fuel) {
       localFuelLevel = fuel * 10;
-    });
+    }
   });
 
   runLanderComplete.subscribe((complete) => {
@@ -102,9 +101,10 @@
     <div>
       <span style="display:inline-block">
         <progress
-          class="progress m-0 is-small {localFuelLevel < 25
-            ? 'is-danger'
-            : 'is-success'}"
+          class:is-danger={localFuelLevel < 25}
+          class:flashing={localFuelLevel < 25}
+          class:is-success={localFuelLevel >= 25}
+          class="progress m-0 is-small"
           value={localFuelLevel}
           max="100"
         />
@@ -197,6 +197,16 @@
 
   .is-bottom {
     bottom: 0px;
+  }
+
+  .flashing {
+    animation: flashing 0.4s linear infinite;
+  }
+
+  @keyframes flashing {
+    50% {
+      box-shadow: 0 0 10px 5px red;
+    }
   }
 
   .err {
