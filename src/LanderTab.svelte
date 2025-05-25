@@ -10,7 +10,7 @@
     startupModalDisplayed,
     runLander,
     resetLander,
-    runLanderComplete,
+    showModal,
     userLogs,
     userPlots,
     difficulty,
@@ -38,9 +38,22 @@
     `Minimize your angle, velocity, and angular velocity at touchdown to land successfully!`,
   ];
 
+  function resetLanderToggle() {
+    $resetLander = false;
+    $resetLander = true;
+  }
+  function runLanderToggle() {
+    $runLander = false;
+    $runLander = true;
+  }
+
+  onMount(() => {
+    $launchError = "";
+  });
+
   let traceBack = "";
   launchError.subscribe((error) => {
-    traceBack = error;
+    traceBack = `${error}`;
   });
 
   let localFuelLevel = fuelCapacity * 10;
@@ -50,10 +63,8 @@
     }
   });
 
-  runLanderComplete.subscribe((complete) => {
-    if (!complete) {
-      return;
-    } else {
+  showModal.subscribe((show) => {
+    if (show) {
       modalState = "is-active";
       ({
         title: modalTitle,
@@ -64,9 +75,10 @@
   });
 
   function closeModal() {
-    $resetLander = true;
+    resetLanderToggle();
     traceBack = "";
     modalState = "";
+    $showModal = false;
   }
 </script>
 
@@ -122,9 +134,9 @@
           text="LAUNCH"
           color="is-success"
           onClick={() => {
-            $runLander = true;
             $userLogs = [];
             $userPlots = [];
+            runLanderToggle();
           }}
         />
       </span>
@@ -133,7 +145,7 @@
           text="RESET"
           color="is-light"
           onClick={() => {
-            $resetLander = true;
+            resetLanderToggle();
             traceBack = "";
           }}
         />
@@ -155,7 +167,7 @@
   <div class="overlay is-left is-bottom is-fullwidth">
     <div class="columns is-mobile p-2">
       <div class="column">
-        <div class={"err p-1 " + (traceBack != "" ? "" : "is-hidden")}>
+        <div class:is-hidden={traceBack == ""} class={"err p-1"}>
           {traceBack}
         </div>
       </div>
