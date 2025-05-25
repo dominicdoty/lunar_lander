@@ -378,7 +378,7 @@ export function drawCircleVector(
     angle = -360;
   }
 
-  if (angle == 0) {
+  if (Math.abs(angle) < 5) {
     return;
   }
 
