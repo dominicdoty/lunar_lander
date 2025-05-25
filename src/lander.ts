@@ -415,6 +415,11 @@ export class LanderPhysics {
       case LanderRenderState.SHOWINFO: {
         let state = this.stateHist.at(-1);
         fuelCallback(state.fuelLevel);
+        if (!this.crashed) {
+          state.aftThrust = 0;
+          state.rotThrust = 0;
+          drawLander(context, state, thrustImage, landerImage);
+        }
         return true;
       }
 
