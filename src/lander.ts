@@ -125,11 +125,13 @@ export class LanderPhysics {
         initialState.pos,
         randomize.posFactor
       );
+
       initialState.linVel = randomizeVector(
         true,
         cartToPolar(initialState.linVel),
         randomize.linVelFactor
       );
+
       initialState.angle = randomizeNumber(
         true,
         initialState.angle,
@@ -153,6 +155,7 @@ export class LanderPhysics {
 
   getInterpolatedState(frameRate: number, idx: number): LanderState {
     // TODO: Interpolate here between the physics rate and frame rate
+
     return this.stateHist[idx];
   }
 
@@ -264,11 +267,15 @@ export class LanderPhysics {
         plot: plot,
       });
 
-      validateUserReturn(
+      let error = validateUserReturn(
         userReturn,
         this.allowableAftThrottle,
         this.allowableRotThrottle
       );
+
+      if (error) {
+        this.error = error;
+      }
 
       ({
         rotThrust: state.rotThrust,

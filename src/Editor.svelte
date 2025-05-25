@@ -49,6 +49,7 @@
       // This ensures runtime errors are caught
       // Even when hidden behind an early return in the first iterations
       let tmpUserStore = {};
+      traceBack = "";
       for (let i = 0; i < 4; i++) {
         let userReturn = runNoConsole(f, {
           x_position: 50,
@@ -59,22 +60,28 @@
           plot: plotTest,
         });
 
-        validateUserReturn(
+        let error: Error = validateUserReturn(
           userReturn,
           $options.allowableAftThrottle,
           $options.allowableRotThrottle
         );
-      }
 
-      traceBack = "";
+        // Non-fatal error - report but accept function
+        // break the loop here though so it can be seen if
+        // its a first loop init problem
+        if (error) {
+          traceBack = `${error}`;
+          break;
+        }
+      }
 
       $userCodeFunction = f;
     } catch (error) {
-      if (error instanceof Error) {
-        traceBack = `Error: ${error.message}`;
-      } else {
-        traceBack = `Unknown error ${error}`;
-      }
+      // Fatal error - replace the user function with a plain throw
+      traceBack = `${error}`;
+      $userCodeFunction = () => {
+        throw error;
+      };
     }
   });
 

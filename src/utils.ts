@@ -102,7 +102,7 @@ export function validateUserReturn(
   obj: Object,
   aftLimits: number[][],
   rotLimits: number[][]
-) {
+): Error {
   let checkMissing = (key: string, obj: Object) => {
     if (!(key in obj)) {
       throw new Error(`${key} missing from return object!`);
@@ -148,11 +148,12 @@ export function validateUserReturn(
   );
 
   if (aftErr != null) {
-    throw aftErr;
+    return aftErr;
+  } else if (rotErr != null) {
+    return rotErr;
   }
-  if (rotErr != null) {
-    throw rotErr;
-  }
+
+  return null;
 }
 
 export function runNoConsole(f: Function, args: AutopilotArgs) {
