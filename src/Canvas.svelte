@@ -30,10 +30,6 @@
 
     // setup entities
     listeners.forEach(async (entity) => {
-      if (entity.setup) {
-        let p = entity.setup($props);
-        if (p && p.then) await p;
-      }
       entity.ready = true;
     });
 

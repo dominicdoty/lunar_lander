@@ -2,7 +2,7 @@
   import type { Writable } from "svelte/store";
   import type { Options } from "./settings";
   import { onMount } from "svelte";
-  import { makeSafe } from "./utils";
+  import { makeNumber } from "./utils";
 
   export let inputType: string;
   export let store: Writable<Options>;
@@ -60,7 +60,7 @@
           domObj.classList.add("is-danger");
         } else {
           store.update((opts) => {
-            let value = makeSafe(domObj.value, $store.defaults[key]);
+            let value = makeNumber(domObj.value, $store.defaults[key]);
             opts[key] = value;
             return opts;
           });

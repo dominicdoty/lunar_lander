@@ -96,16 +96,17 @@ export function findGroundPoint(ground: Line, p: Point): [Point, boolean] {
   let idx = Math.round(p[0] * idxPerGpx);
 
   // Saturate
-  let satuated = false;
+  let saturated = false;
   if (idx < 0) {
     idx = 0;
-    satuated = true;
+    saturated = true;
   } else if (idx > ground.length - 1) {
     idx = ground.length - 1;
-    satuated = true;
+    saturated = true;
   }
 
-  return [ground[idx], satuated];
+  return [ground[idx], saturated];
+}
 }
 
 /**

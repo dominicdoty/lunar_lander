@@ -1,6 +1,7 @@
 /** [X,Y] */
-export type Point = [number, number];
+export type Point = [x: number, y: number];
 export type Line = Point[];
+export type Polar = [mag: number, angle: number];
 
 export type AutopilotArgs = {
   x_position: number;

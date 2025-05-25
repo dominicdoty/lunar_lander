@@ -60,7 +60,7 @@ export class Options {
 export const options = writable(new Options());
 
 // Blob Ops
-export function blobToSettings(stringBlob: string): Options {
+export function blobToSettings(stringBlob: string) {
   // Decode and decompress
   let json = strFromU8(decompressSync(strToU8(atob(stringBlob), true)), true);
   let opts = JSON.parse(json);

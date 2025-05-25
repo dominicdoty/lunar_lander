@@ -34,19 +34,16 @@ export const getState = () => {
   return api.getState();
 };
 
-export const renderable = (render) => {
+export const renderable = (render: Function) => {
   const api = getContext(key);
   const element = {
     ready: false,
     mounted: false,
+    render: render,
   };
-  if (typeof render === "function") {
-    element.render = render;
-  } else if (render) {
-    if (render.render) element.render = render.render;
-    if (render.setup) element.setup = render.setup;
-  }
+
   api.add(element);
+
   onMount(() => {
     element.mounted = true;
     return () => {

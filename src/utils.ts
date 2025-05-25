@@ -221,13 +221,13 @@ export function rad2deg(angle: number) {
   return (180 / Math.PI) * angle;
 }
 
-export function makeSafe(n: string | number, def: number) {
+export function makeNumber(n: string | number, defaultValue: number) {
   if (typeof n == "number") {
     return n;
   } else {
     let safeN = parseFloat(n);
     if (!isFinite(safeN)) {
-      safeN = def;
+      safeN = defaultValue;
     }
     return safeN;
   }
