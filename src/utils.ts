@@ -316,8 +316,8 @@ export function randomizeInitialFromOptions(options: Options): {
 
   if (options.velocityVectorRandomize) {
     factors.linVelFactor = [
-      options.velocityVectorMagnitude,
-      options.velocityVectorAngle,
+      options.velocityVectorRandomizeMagnitude,
+      options.velocityVectorRandomizeAngle,
     ] as Polar;
   }
   if (options.startingAngleRandomize) {
