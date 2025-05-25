@@ -15,19 +15,16 @@ export const userLogs = writable([]);
 export const userPlots = writable([]);
 export const startupModalDisplayed = writable(false);
 export const runLander = writable(false);
+export const runLanderComplete = writable(false);
 export const resetLander = writable(false);
-export const landerSuccessState = writable("");
 export const difficulty = writable(0);
 export const fuelLevel = writable(0);
-export const landerFinalState = writable({
-  pos: [0, 0],
-  linVel: [0, 0],
-  angle: 0,
-  rotVel: 0,
-  aftThrust: 0,
-  rotThrust: 0,
-  fuelLevel: 0,
-} as LanderState);
+export const numLanders = writable(1);
+export const launchResultMessage = writable({
+  title: "",
+  subtitle: "",
+  messages: [""],
+});
 
 /** Coordinate system view
  * used to represent internal game coordinate space, and render view space

@@ -10,22 +10,18 @@
     startupModalDisplayed,
     runLander,
     resetLander,
-    landerSuccessState,
+    runLanderComplete,
     userLogs,
     userPlots,
-    landerFinalState,
     difficulty,
     fuelLevel,
+    numLanders,
+    launchResultMessage,
   } from "./render";
-  import { cartToPolar } from "./utils";
   import { onMount } from "svelte";
   import { launchError, regenerateGround } from "./game";
-  import {
-    crashAngleLimit,
-    crashRotVelLimit,
-    crashVelocityLimit,
-  } from "./lander";
   import Console from "./Console.svelte";
+  import IncDecButton from "./IncDecButton.svelte";
 
   let modalState = "";
   if (!$startupModalDisplayed) {
@@ -55,42 +51,17 @@
     });
   });
 
-  landerSuccessState.subscribe((state) => {
-    if (state == "landed") {
-      modalTitle = "You Landed!";
-    } else if (state == "crashed") {
-      modalTitle = "You Crashed!";
-    } else {
+  runLanderComplete.subscribe((complete) => {
+    if (!complete) {
       return;
+    } else {
+      modalState = "is-active";
+      ({
+        title: modalTitle,
+        subtitle: modalSubTitle,
+        messages: modalMessage,
+      } = $launchResultMessage);
     }
-
-    modalState = "is-active";
-
-    // Calculate velocity magnitude for report
-    let endState = $landerFinalState;
-    let endDifficulty = $difficulty;
-    let [vel, _] = cartToPolar(endState.linVel);
-
-    // Score Calculation
-    if (state == "landed") {
-      // Score components are scaled to 0-1 through the allowable landing values
-      // Components are summed and multiplied by the difficulty of the initial conditions
-      let linVelScore = 1 - vel / crashVelocityLimit;
-      let rotVelScore = 1 - Math.abs(endState.rotVel) / crashRotVelLimit;
-      let angleScore = 1 - Math.abs(endState.angle) / crashAngleLimit;
-      let fuelScore = endState.fuelLevel;
-      let score =
-        endDifficulty * (linVelScore + rotVelScore + angleScore + fuelScore);
-      modalSubTitle = "Score: " + score.toFixed(0);
-    }
-
-    modalMessage = [
-      "Difficulty: " + endDifficulty.toFixed(0),
-      "Angle: " + endState.angle.toFixed(0) + "°",
-      "Velocity: " + vel.toFixed(2),
-      "Rotation: " + endState.rotVel.toFixed(2),
-      "Fuel remaining: " + (endState.fuelLevel * 10).toFixed(0),
-    ];
   });
 
   function closeModal() {
@@ -128,44 +99,57 @@
 
 <div class="is-rel-borderbox is-fullheight is-fullwidth p-1">
   <div class="overlay is-right px-2 pt-1">
-    <span style="display:inline-block">
-      <progress
-        class="progress m-0 is-small {localFuelLevel < 25
-          ? 'is-danger'
-          : 'is-success'}"
-        value={localFuelLevel}
-        max="100"
-      />
-      <div class="columns is-mobile is-size-7 has-text-primary">
-        <div class="column is-narrow">
-          Fuel: {localFuelLevel.toFixed(0)}
+    <div>
+      <span style="display:inline-block">
+        <progress
+          class="progress m-0 is-small {localFuelLevel < 25
+            ? 'is-danger'
+            : 'is-success'}"
+          value={localFuelLevel}
+          max="100"
+        />
+        <div class="columns is-mobile is-size-7 has-text-primary">
+          <div class="column is-narrow">
+            Fuel: {localFuelLevel.toFixed(0)}
+          </div>
+          <div class="column is-float-right">
+            Difficulty: {$difficulty.toFixed(0)}
+          </div>
         </div>
-        <div class="column is-float-right">
-          Difficulty: {$difficulty.toFixed(0)}
-        </div>
-      </div>
-    </span>
-    <span class="pl-2">
-      <Button
-        text="LAUNCH"
-        color="is-success"
-        onClick={() => {
-          $runLander = true;
-          $userLogs = [];
-          $userPlots = [];
-        }}
-      />
-    </span>
-    <span class="pl-2">
-      <Button
-        text="RESET"
-        color="is-light"
-        onClick={() => {
-          $resetLander = true;
-          traceBack = "";
-        }}
-      />
-    </span>
+      </span>
+      <span class="pl-2">
+        <Button
+          text="LAUNCH"
+          color="is-success"
+          onClick={() => {
+            $runLander = true;
+            $userLogs = [];
+            $userPlots = [];
+          }}
+        />
+      </span>
+      <span class="pl-2">
+        <Button
+          text="RESET"
+          color="is-light"
+          onClick={() => {
+            $resetLander = true;
+            traceBack = "";
+          }}
+        />
+      </span>
+    </div>
+    <div class="mt-2 is-flex">
+      <span class="ml-auto">
+        <IncDecButton
+          text="LANDERS"
+          color="is-info"
+          countCallback={(localNumLanders) => ($numLanders = localNumLanders)}
+          count={$numLanders}
+          max={25}
+        />
+      </span>
+    </div>
   </div>
 
   <div class="overlay is-left is-bottom is-fullwidth">

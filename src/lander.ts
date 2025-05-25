@@ -366,7 +366,7 @@ export class LanderPhysics {
         if (this.renderFrameIdx == this.stateHist.length) {
           if (this.crashed) {
             this.explosion = new Explosion(
-              4000,
+              3000,
               state.pos,
               state.linVel,
               state.fuelLevel,
@@ -374,7 +374,7 @@ export class LanderPhysics {
             );
             this.renderState = LanderRenderState.EXPLODING;
           } else {
-            this.gloatTimerExpired = makeTimer(1000);
+            this.gloatTimerExpired = makeTimer(3000);
             this.renderState = LanderRenderState.GLOATING;
           }
         }

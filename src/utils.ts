@@ -328,3 +328,7 @@ export function randomizeInitialFromOptions(options: Options): {
 
   return factors;
 }
+
+export function average(nums: number[]): number {
+  return nums.reduce((p, c) => p + c) / nums.length;
+}
