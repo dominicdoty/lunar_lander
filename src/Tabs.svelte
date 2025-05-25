@@ -30,7 +30,7 @@
     <div class="column is-narrow pb-0">
       <ul bind:clientHeight={headerHeight}>
         {#each items as item}
-          <li class={activeTabValue === item.value ? "active" : ""}>
+          <li class:active={activeTabValue === item.value} class="pr-1">
             <menuitem on:click={handleClick(item.value)}>{item.label}</menuitem>
           </li>
         {/each}
