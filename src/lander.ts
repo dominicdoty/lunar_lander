@@ -377,12 +377,12 @@ export class LanderPhysics {
               3000,
               state.pos,
               state.linVel,
-              state.fuelLevel,
+              state.fuelLevel + 2,
               this.ground
             );
             this.renderState = LanderRenderState.EXPLODING;
           } else {
-            this.gloatTimerExpired = makeTimer(3000);
+            this.gloatTimerExpired = makeTimer(1000);
             this.renderState = LanderRenderState.GLOATING;
           }
         }
