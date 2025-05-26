@@ -1,6 +1,10 @@
 <script lang="ts">
-  import { validateUserReturn, runNoConsole } from "./utils";
-  import { userCodeFunction, runLander, userCode } from "./render";
+  import {
+    runNoConsole,
+    initialFromOptions,
+    randomizeInitialFromOptions,
+  } from "./utils";
+  import { userCodeFunction, runLander, userCode, VW } from "./render";
   import { options } from "./settings";
   import Hotkey from "./Hotkey.svelte";
 
@@ -9,9 +13,24 @@
   import { javascript } from "@codemirror/lang-javascript";
   import { barf as codetheme } from "thememirror";
   import { js_beautify } from "js-beautify";
+  import { fuelCapacity, LanderPhysics } from "./lander";
+  import { gground } from "./game";
 
   // Stop lander running when we go back to launch tab
   $runLander = false;
+
+  let testLander = new LanderPhysics(
+    initialFromOptions($options, $gground, fuelCapacity, $VW),
+    () => {},
+    $options.enableFuel,
+    $options.enableFuelMass,
+    $options.allowableAftThrottle,
+    $options.allowableRotThrottle,
+    $gground,
+    randomizeInitialFromOptions($options)
+  );
+  testLander.enablePlotting = false;
+  testLander.enableLogging = false;
 
   let codeText = "";
   let traceBack = "";
@@ -42,47 +61,46 @@
 
   // Watch for updates to userCode and set function
   userCode.subscribe((code: string) => {
+    traceBack = "";
+    let error: Error = null;
+    let userFunc = null;
+
     try {
-      let f = Function(code);
+      userFunc = Function(code);
+      testLander.userAutoPilot = userFunc;
 
-      // Run a few times
-      // This ensures runtime errors are caught
-      // Even when hidden behind an early return in the first iterations
-      let tmpUserStore = {};
-      traceBack = "";
+      let landerStep = () => {
+        testLander.stepAutopilot(testLander.stateHist.at(-1));
+      };
+
       for (let i = 0; i < 4; i++) {
-        let userReturn = runNoConsole(f, {
-          x_position: 50,
-          altitude: 500,
-          angle: 0,
-          userStore: tmpUserStore,
-          log: () => {},
-          plot: plotTest,
-        });
+        runNoConsole(landerStep, null);
 
-        let error: Error = validateUserReturn(
-          userReturn,
-          $options.allowableAftThrottle,
-          $options.allowableRotThrottle
-        );
-
-        // Non-fatal error - report but accept function
-        // break the loop here though so it can be seen if
-        // its a first loop init problem
-        if (error) {
+        if (testLander.error) {
+          error = testLander.error;
           traceBack = `${error}`;
           break;
         }
       }
-
-      $userCodeFunction = f;
-    } catch (error) {
-      // Fatal error - replace the user function with a plain throw
+    } catch (thrownError) {
+      error = thrownError;
       traceBack = `${error}`;
+    }
+
+    if (!error) {
+      $userCodeFunction = userFunc;
+    } else {
       $userCodeFunction = () => {
         throw error;
       };
     }
+
+    // reset testLander state
+    testLander.stateHist = [testLander.stateHist[0]];
+    testLander.userStore = {};
+    testLander.isAboveGround = true;
+    testLander.crashed = false;
+    testLander.error = null;
   });
 
   // Attached to CodeMirror object to allow us to attempt to reset
