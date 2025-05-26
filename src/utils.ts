@@ -156,7 +156,7 @@ export function validateUserReturn(
   return null;
 }
 
-export function runNoConsole(f: Function, args: AutopilotArgs) {
+export function runNoConsole(f: Function, args: any) {
   let methods = { log: {}, debug: {}, warn: {}, info: {} };
 
   try {

@@ -18,6 +18,10 @@
       localGround,
       randomizeInitialFromOptions(localOptions)
     );
+
+    lander.enablePlotting = false;
+    lander.enableLogging = false;
+
     lander.run();
     return lander.crashed;
   }
@@ -131,7 +135,7 @@
       <div class="column"></div>
     </div>
 
-    <div class="columns is-size-5">
+    <div class="columns is-size-5 is-mobile">
       <div class="column is-narrow">
         <div>Number of Trials:</div>
         <div>Successful Trials:</div>

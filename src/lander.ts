@@ -68,13 +68,15 @@ export class LanderPhysics {
   allowableRotThrottle: Array<Array<number>>;
   physicsHz: number; // Rate at which physics are simulated
   controlHz: number; // Rate at which controls are simulated
+  enablePlotting: boolean = true;
+  enableLogging: boolean = true;
 
   // Internal State
   stateHist: LanderStateTimeSeries; // storage of flight path
   userStore: object; // storage of user data from call to call
   isAboveGround: boolean; // are we still operating?
   crashed: boolean; // does this end in tears?
-  error: Error; // Store errors encountered while running
+  error: Error = null; // Store errors encountered while running
   ground: Line; // ground points local storage
 
   // Rendering State
@@ -315,8 +317,10 @@ export class LanderPhysics {
         altitude: getAltitude(this.ground, state.pos),
         angle: state.angle,
         userStore: this.userStore,
-        log: log,
-        plot: plot,
+        log: this.enableLogging ? log : () => {},
+        plot: this.enablePlotting ? plot : () => {},
+        mathjs: mathjs,
+        createSCS: null,
       });
 
       let error = validateUserReturn(
