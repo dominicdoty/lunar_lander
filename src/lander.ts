@@ -98,6 +98,74 @@ export class LanderPhysics {
     }
   }
 
+  get ["currentLinVelControlHz"]() {
+    const stateCount = this.physicsHz / this.controlHz;
+
+    let { linVel, rotVel } = this.stateHist.slice(-stateCount).reduce(
+      (p, s) => ({
+        linVel: addPoints(p.linVel, s.linVel),
+        rotVel: p.rotVel + s.rotVel,
+      }),
+      {
+        linVel: [0, 0] as Point,
+        rotVel: 0,
+      }
+    );
+
+    return linVel;
+  }
+
+  get ["currentLinVelBaseHz"]() {
+    const stateCount = this.physicsHz / (1 / basePhysicsPeriod);
+
+    let { linVel, rotVel } = this.stateHist.slice(-stateCount).reduce(
+      (p, s) => ({
+        linVel: addPoints(p.linVel, s.linVel),
+        rotVel: p.rotVel + s.rotVel,
+      }),
+      {
+        linVel: [0, 0] as Point,
+        rotVel: 0,
+      }
+    );
+
+    return linVel;
+  }
+
+  get ["currentRotVelControlHz"]() {
+    const stateCount = this.physicsHz / this.controlHz;
+
+    let { linVel, rotVel } = this.stateHist.slice(-stateCount).reduce(
+      (p, s) => ({
+        linVel: addPoints(p.linVel, s.linVel),
+        rotVel: p.rotVel + s.rotVel,
+      }),
+      {
+        linVel: [0, 0] as Point,
+        rotVel: 0,
+      }
+    );
+
+    return rotVel;
+  }
+
+  get ["currentRotVelBaseHz"]() {
+    const stateCount = this.physicsHz / (1 / basePhysicsPeriod);
+
+    let { linVel, rotVel } = this.stateHist.slice(-stateCount).reduce(
+      (p, s) => ({
+        linVel: addPoints(p.linVel, s.linVel),
+        rotVel: p.rotVel + s.rotVel,
+      }),
+      {
+        linVel: [0, 0] as Point,
+        rotVel: 0,
+      }
+    );
+
+    return rotVel;
+  }
+
   constructor(
     initialState: LanderState,
     userAutoPilot: Function,
@@ -241,9 +309,9 @@ export class LanderPhysics {
   }
 
   run() {
-    let physicsPeriod = 1 / this.physicsHz;
-    let controlPeriod = 1 / this.controlHz;
-    let controlPeriodRenders = controlPeriod / physicsPeriod;
+    const physicsPeriod = 1 / this.physicsHz;
+    const controlPeriod = 1 / this.controlHz;
+    const controlPeriodRenders = controlPeriod / physicsPeriod;
 
     let renderCounter = 0;
     let isAboveGround = true;
@@ -252,23 +320,9 @@ export class LanderPhysics {
 
       // Run autopilot every nth update
       if (renderCounter % controlPeriodRenders == 0) {
-        // take the sum of the last controlPeriodRenders states
-        let { linVel, rotVel } = this.stateHist
-          .slice(-controlPeriodRenders)
-          .reduce(
-            (p, s) => ({
-              linVel: addPoints(p.linVel, s.linVel),
-              rotVel: p.rotVel + s.rotVel,
-            }),
-            {
-              linVel: [0, 0] as Point,
-              rotVel: 0,
-            }
-          );
-
         let autopilotState: LanderState = {
-          linVel: linVel,
-          rotVel: rotVel,
+          linVel: this.currentLinVelControlHz,
+          rotVel: this.currentRotVelControlHz,
           pos: state.pos,
           angle: state.angle,
           aftThrust: state.aftThrust,
@@ -300,12 +354,11 @@ export class LanderPhysics {
 
     // Did we crash or land?
     let finalState = this.stateHist.at(-1);
-    let [vel, _] = cartToPolar(finalState.linVel);
 
     if (
-      vel > crashVelocityLimit ||
-      finalState.rotVel > crashRotVelLimit ||
-      finalState.rotVel < -crashRotVelLimit ||
+      cartToPolar(this.currentLinVelBaseHz)[0] > crashVelocityLimit ||
+      this.currentRotVelBaseHz > crashRotVelLimit ||
+      this.currentRotVelBaseHz < -crashRotVelLimit ||
       finalState.angle > crashAngleLimit ||
       finalState.angle < -crashAngleLimit
     ) {

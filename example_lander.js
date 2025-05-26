@@ -5,7 +5,9 @@ let {
   angle,
   userStore,
   log,
-  plot
+  plot,
+  mathjs,
+  SCS
 } = arguments[0];
 
 let [rp, ri, rd] = [0.03, 0.0, 0.6];
@@ -26,9 +28,9 @@ if (!("integral" in userStore)) {
 
   // Escape return here since we can't do anything on the first frame
   return {
-      rotThrust: 0,
-      aftThrust: 0,
-      userStore: userStore
+    rotThrust: 0,
+    aftThrust: 0,
+    userStore: userStore
   };
 }
 
