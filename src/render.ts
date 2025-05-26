@@ -178,7 +178,7 @@ export class ExplosionParticle {
   vel: Point;
   size: number;
   ground: Line;
-  hint: number = 0;
+  dead: boolean = false;
 
   constructor(pos: Point, vel: Point, size: number, ground: Line) {
     this.pos = pos;
@@ -191,9 +191,13 @@ export class ExplosionParticle {
     let above: boolean;
 
     // Skip if we've failed before
-    if (this.hint < 0) {
+    if (this.dead) {
       return;
     }
+
+    // Update Position
+    this.vel = [this.vel[0], this.vel[1] - 1 / 60];
+    this.pos = [this.pos[0] + this.vel[0], this.pos[1] + this.vel[1]];
 
     // Try to find ground
     try {
@@ -201,12 +205,10 @@ export class ExplosionParticle {
     } catch {
       // Note that we failed and stop drawing
       above = false;
-      this.hint = -1;
+      this.dead = true;
     }
 
     if (above) {
-      this.vel = [this.vel[0], this.vel[1] - 1 / 60];
-      this.pos = [this.pos[0] + this.vel[0], this.pos[1] + this.vel[1]];
       context.arc(this.pos[0], this.pos[1], this.size, 0, 2 * Math.PI);
     }
   }

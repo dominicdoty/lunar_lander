@@ -88,7 +88,7 @@ export function genGround(
 /**
  * @param ground points for ground
  * @param p point of interest
- * @returns ground point closest to directly below supplied point and a hint
+ * @returns ground point closest to directly below supplied point and whether it hit the edge
  */
 export function findGroundPoint(ground: Line, p: Point): [Point, boolean] {
   // Calculate expected index of ground point
