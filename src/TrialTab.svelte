@@ -18,7 +18,7 @@
       localGround,
       randomizeInitialFromOptions(localOptions)
     );
-    lander.run(60, 60);
+    lander.run();
     return lander.crashed;
   }
 

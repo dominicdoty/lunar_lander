@@ -25,6 +25,8 @@ export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
 export const fuelCapacity = 10;
+export const defaultPhysicsHz = 240;
+export const defaultControlHz = 30;
 
 enum LanderRenderState {
   "IDLE",
@@ -58,14 +60,17 @@ let plot = rateLimitedCall(10, (callNum: number, data: {}) => {
 });
 
 export class LanderPhysics {
-  stateHist: LanderStateTimeSeries;
+  // Configuration
   userAutoPilot: Function;
   enableFuel: boolean; // enforce running out of fuel
   enableFuelMass: boolean; // account for mass of fuel (requires enableFuel)
   allowableAftThrottle: Array<Array<number>>; // array of tuples representing allowable throttle ranges
   allowableRotThrottle: Array<Array<number>>;
+  physicsHz: number; // Rate at which physics are simulated
+  controlHz: number; // Rate at which controls are simulated
 
-  // Internal State Initial Values
+  // Internal State
+  stateHist: LanderStateTimeSeries; // storage of flight path
   userStore: object; // storage of user data from call to call
   isAboveGround: boolean; // are we still operating?
   crashed: boolean; // does this end in tears?
@@ -94,12 +99,14 @@ export class LanderPhysics {
     allowableAftThrottle: Array<Array<number>>,
     allowableRotThrottle: Array<Array<number>>,
     ground: Line,
-    randomize?: {
+    randomize: {
       posFactor: Point;
       linVelFactor: Polar;
       angleFactor: number;
       rotVelFactor: number;
-    }
+    },
+    physicsHz: number = defaultPhysicsHz,
+    controlHz: number = defaultControlHz
   ) {
     // Autopilot
     this.userAutoPilot = userAutoPilot;
@@ -109,10 +116,20 @@ export class LanderPhysics {
     this.enableFuelMass = enableFuelMass;
     this.allowableAftThrottle = sortArrayOfPairs(allowableAftThrottle);
     this.allowableRotThrottle = sortArrayOfPairs(allowableRotThrottle);
+    this.physicsHz = physicsHz;
+    this.controlHz = controlHz;
+
+    if (physicsHz < controlHz) {
+      throw new Error("Physics rate must be higher than control rate");
+    }
+
+    const scale = 1 / this.physicsHz / basePhysicsPeriod;
 
     // Internal State Initial Values
     initialState.fuelLevel = fuelCapacity;
     initialState.angle = wrapAngle(initialState.angle);
+    initialState.linVel = initialState.linVel.map((x) => scale * x) as Point;
+    initialState.rotVel = scale * initialState.rotVel;
     this.userStore = {};
     this.ground = ground;
     this.isAboveGround = true;
@@ -153,10 +170,21 @@ export class LanderPhysics {
     this.stateHist = [Object.assign({}, initialState)];
   }
 
-  getInterpolatedState(frameRate: number, idx: number): LanderState {
-    // TODO: Interpolate here between the physics rate and frame rate
+  getInterpolatedState(
+    frameHz: number,
+    idx: number
+  ): [state: LanderState, isLast: boolean] {
+    // Convert the given idx (in frameHz frames) to a physicsHz idx
+    // e.g. :
+    // frameHz is 60, physicsHz is 120
+    // an idx of 5 is actually idx 5*2=10
+    let trueIdx = Math.round(idx * (this.physicsHz / frameHz));
 
-    return this.stateHist[idx];
+    if (trueIdx >= this.stateHist.length) {
+      return [this.stateHist.at(-1), true];
+    } else {
+      return [this.stateHist[trueIdx], false];
+    }
   }
 
   getBbox() {
@@ -205,14 +233,10 @@ export class LanderPhysics {
     return e / fuelCapacity;
   }
 
-  run(PhysicsHz: number, controlHz: number) {
-    if (PhysicsHz < controlHz) {
-      throw new Error("Physics rate must be higher than control rate");
-    }
-
-    let physicsPeriod = 1 / PhysicsHz;
-    let controlPeriod = 1 / controlHz;
-    let controlPeriodRenders = physicsPeriod / controlPeriod;
+  run() {
+    let physicsPeriod = 1 / this.physicsHz;
+    let controlPeriod = 1 / this.controlHz;
+    let controlPeriodRenders = controlPeriod / physicsPeriod;
 
     let renderCounter = 0;
     let isAboveGround = true;
@@ -221,11 +245,39 @@ export class LanderPhysics {
 
       // Run autopilot every nth update
       if (renderCounter % controlPeriodRenders == 0) {
+        // take the sum of the last controlPeriodRenders states
+        let { linVel, rotVel } = this.stateHist
+          .slice(-controlPeriodRenders)
+          .reduce(
+            (p, s) => ({
+              linVel: addPoints(p.linVel, s.linVel),
+              rotVel: p.rotVel + s.rotVel,
+            }),
+            {
+              linVel: [0, 0] as Point,
+              rotVel: 0,
+            }
+          );
+
+        let autopilotState: LanderState = {
+          linVel: linVel,
+          rotVel: rotVel,
+          pos: state.pos,
+          angle: state.angle,
+          aftThrust: state.aftThrust,
+          rotThrust: state.rotThrust,
+          fuelLevel: state.fuelLevel,
+        };
+
         let start = performance.now();
-        state = this.stepAutopilot(state);
+        autopilotState = this.stepAutopilot(autopilotState);
         let duration = performance.now() - start;
 
-        if (duration > (1 / controlHz) * 1000) {
+        state.aftThrust = autopilotState.aftThrust;
+        state.rotThrust = autopilotState.rotThrust;
+        state.fuelLevel = autopilotState.fuelLevel;
+
+        if (duration > (1 / this.controlHz) * 1000) {
           console.warn("Control loop time exceeded");
           // TODO: Do something with this
         }
@@ -297,6 +349,7 @@ export class LanderPhysics {
     state: LanderState
   ): [LanderState, boolean] {
     const scale = physicsPeriod / basePhysicsPeriod;
+    const scaleSquare = Math.pow(scale, 2);
 
     // Update Fuel Levels (track separate from mass since dynamic mass may not be enabled)
     state.fuelLevel -=
@@ -304,7 +357,7 @@ export class LanderPhysics {
       (Math.abs(state.rotThrust) * rotationalThrustEfficiency +
         state.aftThrust * aftThrustEfficiency);
 
-    if (state.fuelLevel <= 0) {
+    if (state.fuelLevel < 0) {
       state.fuelLevel = 0;
     }
 
@@ -319,10 +372,13 @@ export class LanderPhysics {
       (state.aftThrust * Math.sin(deg2rad(state.angle))) / this.mass;
     let yCompAccel =
       (state.aftThrust * Math.cos(deg2rad(state.angle))) / this.mass;
+    yCompAccel = yCompAccel - gravity;
+
+    let rotAccelComp = state.rotThrust / this.mass; // mass isn't really accurate here as it should be rotational inertia
 
     // Update accel
-    let linAccel: Point = [scale * xCompAccel, scale * (yCompAccel - gravity)];
-    let rotAccel: number = scale * (state.rotThrust / this.mass); // mass isn't really accurate here as it should be rotational inertia
+    let linAccel: Point = [scaleSquare * xCompAccel, scaleSquare * yCompAccel];
+    let rotAccel: number = scaleSquare * rotAccelComp;
 
     // Update speed
     state.linVel = addPoints(state.linVel, linAccel);
@@ -355,7 +411,7 @@ export class LanderPhysics {
   ): boolean {
     switch (this.renderState) {
       case LanderRenderState.IDLE: {
-        let state = this.getInterpolatedState(60, 0);
+        let [state, _] = this.getInterpolatedState(60, 0);
         fuelCallback(state.fuelLevel);
         drawLander(context, state, thrustImage, landerImage);
 
@@ -366,12 +422,15 @@ export class LanderPhysics {
       }
 
       case LanderRenderState.FLYING: {
-        let state = this.getInterpolatedState(60, this.renderFrameIdx);
+        let [state, isLast] = this.getInterpolatedState(
+          60,
+          this.renderFrameIdx
+        );
         fuelCallback(state.fuelLevel);
         drawLander(context, state, thrustImage, landerImage);
-
         this.renderFrameIdx += 1;
-        if (this.renderFrameIdx == this.stateHist.length) {
+
+        if (isLast) {
           if (this.crashed) {
             this.explosion = new Explosion(
               3000,

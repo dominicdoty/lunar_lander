@@ -140,7 +140,7 @@
   runLander.subscribe((run) => {
     if (run && state == LanderTabState.IDLE) {
       // Run Simulations
-      landers.map((lander) => lander.run(60, 60));
+      landers.map((lander) => lander.run());
 
       // Enable Rendering
       state = LanderTabState.FLYING;
