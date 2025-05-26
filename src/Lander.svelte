@@ -84,19 +84,23 @@
     landers = [
       ...Array(localNumLanders)
         .fill(null)
-        .map(
-          () =>
-            new LanderPhysics(
-              initialFromOptions(localOptions, localGround, fuelCapacity, $VW),
-              localUserCodeFunction,
-              localOptions.enableFuel,
-              localOptions.enableFuelMass,
-              localOptions.allowableAftThrottle,
-              localOptions.allowableRotThrottle,
-              localGround,
-              randomizeInitialFromOptions(localOptions)
-            )
-        ),
+        .map((v, idx) => {
+          let lander = new LanderPhysics(
+            initialFromOptions(localOptions, localGround, fuelCapacity, $VW),
+            localUserCodeFunction,
+            localOptions.enableFuel,
+            localOptions.enableFuelMass,
+            localOptions.allowableAftThrottle,
+            localOptions.allowableRotThrottle,
+            localGround,
+            randomizeInitialFromOptions(localOptions)
+          );
+          // Suppress logging and plotting for all but first lander
+          // TODO: Maybe we can avoid this later
+          lander.enablePlotting = idx == 0;
+          lander.enableLogging = idx == 0;
+          return lander;
+        }),
     ];
 
     // Average difficulty
