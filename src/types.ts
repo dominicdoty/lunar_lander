@@ -10,6 +10,8 @@ export type AutopilotArgs = {
   userStore: {};
   log: (...args: any) => void;
   plot: (...args: any) => void;
+  mathjs: any;
+  SCS: any;
 };
 
 export type LanderState = {

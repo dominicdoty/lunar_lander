@@ -33,7 +33,9 @@ let {
   angle,
   userStore,
   log,
-  plot
+  plot,
+  mathjs,
+  SCS
 } = arguments[0];
 
 // Example of how to initialize user storage

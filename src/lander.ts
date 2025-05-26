@@ -21,6 +21,11 @@ import {
   makeTimer,
 } from "./utils";
 
+import createSCS from "scs-solver"; // if using ES6 modules
+import { create, all } from "mathjs";
+const mathjs = create(all, {});
+const SCS = await createSCS();
+
 export const crashVelocityLimit = 1;
 export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
@@ -320,7 +325,7 @@ export class LanderPhysics {
         log: this.enableLogging ? log : () => {},
         plot: this.enablePlotting ? plot : () => {},
         mathjs: mathjs,
-        createSCS: null,
+        SCS: SCS,
       });
 
       let error = validateUserReturn(

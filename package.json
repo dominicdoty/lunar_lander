@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vite dev --host",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "stripsvg": "svgo -f ./src/lander_sprites -o ./src/lander_sprites/stripped"
   },
@@ -32,6 +32,8 @@
     "c3": "^0.7.20",
     "fflate": "^0.8.0",
     "js-beautify": "^1.15.1",
+    "mathjs": "^14.5.0",
+    "scs-solver": "^1.0.2",
     "svelte-codemirror-editor": "^1.4.0",
     "thememirror": "^2.0.1"
   },
