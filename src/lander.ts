@@ -31,7 +31,7 @@ export const crashRotVelLimit = 0.5;
 export const crashAngleLimit = 10;
 export const fuelCapacity = 10;
 export const defaultPhysicsHz = 240;
-export const defaultControlHz = 30;
+export const defaultControlHz = 60;
 
 enum LanderRenderState {
   "IDLE",

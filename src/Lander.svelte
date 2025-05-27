@@ -161,8 +161,10 @@
 
     const avgDifficulty = average(landers.map((l) => l.getDifficulty()));
     const avgAngle = average(endStates.map((s) => s.angle));
-    const avgVel = average(endStates.map((s) => cartToPolar(s.linVel)[0]));
-    const avgRotVel = average(endStates.map((s) => s.rotVel));
+    const avgVel = average(
+      landers.map((s) => cartToPolar(s.currentLinVelBaseHz)[0])
+    );
+    const avgRotVel = average(landers.map((s) => s.currentRotVelBaseHz));
     const avgFuelLevel = average(endStates.map((s) => s.fuelLevel));
 
     const linVelScore = 1 - avgVel / crashVelocityLimit;
